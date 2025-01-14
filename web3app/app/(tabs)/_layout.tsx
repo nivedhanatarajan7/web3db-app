@@ -7,6 +7,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { Icon } from 'react-native-paper'
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -29,15 +30,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Summary',
+          tabBarIcon: ({ color }) => <Icon source="home" size={30} color="gray"/>
         }}
       />
       <Tabs.Screen
-        name="adddata"
+        name="add-data"
         options={{
           title: 'Add Data',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Icon source="plus" size={30} color="gray"/>
         }}
       />
     </Tabs>
