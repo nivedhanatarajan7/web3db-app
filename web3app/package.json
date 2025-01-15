@@ -2,7 +2,7 @@
   "name": "web3app",
   "main": "expo-router/entry",
   "version": "1.0.0",
-  "homepage": "https://nivedhanatarajan7.github.io/web3ab-app",
+  "homepage": "https://nivedhanatarajan7.github.io/web3db-app",
   "scripts": {
     "deploy": "gh-pages --nojekyll -d dist",
     "predeploy": "expo export -p web",
