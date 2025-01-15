@@ -4,6 +4,9 @@ import { Card } from "react-native-paper";
 import axios from "axios";
 import { MaterialCommunityIcons } from "react-native-vector-icons";
 import { LineChart } from "react-native-chart-kit";
+import { AppRegistry } from 'react-native';
+
+
 
 // Mocked auth function
 const auth = async () => {
