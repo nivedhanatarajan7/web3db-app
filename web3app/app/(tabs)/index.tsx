@@ -275,7 +275,7 @@ export default function HomePage() {
       setSession(sessionData);
 
       // Connect to the EMQX MQTT broker
-      const client = mqtt.connect("ws://broker.emqx.io:8083/mqtt");
+      const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
       client.on("connect", () => {
         console.log("Connected to MQTT Broker");
