@@ -16,7 +16,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
+        headerShown: true,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
@@ -39,6 +39,13 @@ export default function TabLayout() {
         options={{
           title: 'Add Data',
           tabBarIcon: ({ color }) => <Icon source="plus" size={30} color="gray"/>
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <Icon source="star" size={30} color="gray"/>
         }}
       />
     </Tabs>
