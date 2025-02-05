@@ -1,15 +1,58 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
 import { LineChart } from "react-native-chart-kit";
+import axios from "axios";
 // import { AlertContext } from "../AlertContext";
 
 export default function HeartRateScreen() {
   // const { heartAlertsEnabled } = useContext(AlertContext);
-  const [hrValues, setHrValues] = useState<number[]>([75, 80, 85, 90, 95, 88, 92]); // Mock Data
-  const [timestamps, setTimestamps] = useState<string[]>(["12:00", "12:05", "12:10", "12:15", "12:20", "12:25", "12:30"]); // Mock Times
+  const [hrValues, setHrValues] = useState<number[]>([]);
+  const [timestamps, setTimestamps] = useState<number[]>([]);
+
+  useEffect(() => {
+    fetchHeartRate();
+  }, []);
+
+  const fetchHeartRate = async () => {
+    try {
+      const response = await axios.post("http://75.131.29.55:5100/fetch-medical", {
+        type: "heart_rate",
+      });
+
+      const hrData = JSON.parse(response.data);
+
+      if (hrData.length === 0) return;
+
+      const newHrValues = hrData.map((record: any) => parseFloat(record.val));
+      const newTimestamps = hrData.map(() => Date.now()); // Generate timestamps
+
+      setHrValues(newHrValues);
+      setTimestamps(newTimestamps);
+    } catch (error) {
+      console.error("Error fetching heart rate data", error);
+    }
+  };
+
+  const filterData = () => {
+    const now = Date.now();
+    const timeLimit = 10 * 60 * 1000; // Last 10 minutes
+
+    const filteredData = timestamps
+      .map((timestamp, index) => ({ timestamp, bpm: hrValues[index] }))
+      .filter((entry) => now - entry.timestamp <= timeLimit);
+
+    const filteredHR = filteredData.map((entry) => entry.bpm);
+    const filteredTimestamps = filteredData
+      .map((entry) => new Date(entry.timestamp).toLocaleTimeString())
+      .filter((_, i) => i % 3 === 0); // Show every 3rd timestamp
+
+    return { filteredHR, filteredTimestamps };
+  };
+
+  const { filteredHR, filteredTimestamps } = filterData();
 
   const averageHeartRate =
-    hrValues.length > 0 ? (hrValues.reduce((a, b) => a + b) / hrValues.length).toFixed(1) : "No data";
+    filteredHR.length > 0 ? (filteredHR.reduce((a, b) => a + b) / filteredHR.length).toFixed(1) : "No data";
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -19,11 +62,11 @@ export default function HeartRateScreen() {
         <Text style={styles.value}>{averageHeartRate} bpm</Text>
       </View>
       <Text style={styles.chartTitle}>Heart Rate Trends</Text>
-      
+
       <LineChart
         data={{
-          labels: timestamps,
-          datasets: [{ data: hrValues }],
+          labels: filteredTimestamps.length > 0 ? filteredTimestamps : ["No Data"],
+          datasets: [{ data: filteredHR.length > 0 ? filteredHR : [0] }],
         }}
         width={Dimensions.get("window").width * 0.92}
         height={280}
@@ -91,4 +134,3 @@ const chartConfig = {
   strokeWidth: 2,
   decimalPlaces: 0,
 };
-

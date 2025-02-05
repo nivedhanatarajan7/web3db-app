@@ -34,27 +34,33 @@ export default function BloodPressureScreen() {
 
   const fetchBloodPressure = async () => {
     const data = {
-      type: "blood_pressure_test",
+      type: "blood_pressure",
     };
   
     try {
-      const response = await axios.post("http://172.20.24.155:5001/fetch-medical", data, {
+      const response = await axios.post("http://75.131.29.55:5100/fetch-medical", data, {
         headers: {
           "Content-Type": "application/json",
         },
       });
   
-      // Parse the response.data string into a JavaScript object
       const bpData = JSON.parse(response.data); 
   
+      if (bpData.length === 0) return; // Ensure data exists
+  
       const sys = bpData.map((record: any) => parseFloat(record.sys)); 
-      setSbp(sys);
       const dia = bpData.map((record: any) => parseFloat(record.dia)); 
+      const newTimestamps = bpData.map(() => Date.now()); // Generate timestamps
+  
+      setSbp(sys);
       setDbp(dia);
+      setTimestamps(newTimestamps); // Store timestamps
+  
     } catch (error) {
       console.error("Error fetching BP data", error);
     }
   };
+  
 
   // Function to filter data based on the selected timeframe
   const filterDataByTimeframe = (timeframe: string) => {
