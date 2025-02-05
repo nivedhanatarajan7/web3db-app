@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from "react-native-vector-icons";
 import { AlertContext } from '../AlertContext'; // Adjust the path as needed
 
 export default function ProfilePage({ navigation }: any) {
+  
   const { heartAlertsEnabled, setHeartAlertsEnabled } = useContext(AlertContext);
   const { bpAlertsEnabled, setBPAlertsEnabled } = useContext(AlertContext);
 
