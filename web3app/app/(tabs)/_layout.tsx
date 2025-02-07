@@ -28,6 +28,13 @@ export default function TabLayout() {
         }),
       }}>
       <Tabs.Screen
+        name="login"
+        options={{
+          title: 'Login',
+          tabBarIcon: ({ color }) => <Icon source="lock" size={30} color="gray" />,
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: 'Summary',
