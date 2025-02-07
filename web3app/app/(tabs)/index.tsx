@@ -33,6 +33,47 @@ export default function HomePage() {
           </Card.Content>
         </Card>
       </TouchableOpacity>
+
+            {/* Blood Pressure Card */}
+            <TouchableOpacity onPress={() => router.push("/resprate")}>
+        <Card style={styles.card}>
+          <Card.Content>
+            <View style={styles.row}>
+              <MaterialCommunityIcons name="bed" size={30} color="purple" />
+              <Text style={styles.cardHeader}>Respiratory Health</Text>
+            </View>
+            <Text style={styles.label}>Tap to view respiratory health details.</Text>
+          </Card.Content>
+        </Card>
+      </TouchableOpacity>
+
+      {/* Blood Pressure Card */}
+      <TouchableOpacity onPress={() => router.push("/exercise")}>
+        <Card style={styles.card}>
+          <Card.Content>
+            <View style={styles.row}>
+              <MaterialCommunityIcons name="run" size={30} color="green" />
+              <Text style={styles.cardHeader}>Exercise</Text>
+            </View>
+            <Text style={styles.label}>Tap to view exercise details.</Text>
+          </Card.Content>
+        </Card>
+      </TouchableOpacity>
+
+      {/* Blood Pressure Card */}
+      <TouchableOpacity onPress={() => router.push("/sleep")}>
+        <Card style={styles.card}>
+          <Card.Content>
+            <View style={styles.row}>
+              <MaterialCommunityIcons name="bed" size={30} color="black" />
+              <Text style={styles.cardHeader}>Sleep</Text>
+            </View>
+            <Text style={styles.label}>Tap to view sleep details.</Text>
+          </Card.Content>
+        </Card>
+      </TouchableOpacity>
+
+
     </ScrollView>
   );
 }

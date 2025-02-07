@@ -35,6 +35,10 @@ export default function RootLayout() {
         <Stack.Screen name="+not-found" />
         <Stack.Screen name="heart"/>
         <Stack.Screen name="bp"/>
+        <Stack.Screen name="exercise"/>
+        <Stack.Screen name="sleep"/>
+        <Stack.Screen name="resprate"/>
+
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

@@ -101,10 +101,16 @@ export default function BloodPressureScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Blood Pressure Overview</Text>
       <View style={styles.card}>
-        <Text style={styles.label}>Average Blood Pressure</Text>
-        <Text style={styles.value}>{averageSBP} / {averageDBP} mmHg</Text>
-      </View>
-
+  <Text style={styles.label}>Current Blood Pressure</Text>
+  <Text style={styles.value}>
+    {sbp.length > 0 ? sbp[sbp.length - 1] : "No data"} /{" "}
+    {dbp.length > 0 ? dbp[dbp.length - 1] : "No data"} mmHg
+  </Text>
+  <Text style={styles.label}>Average Blood Pressure</Text>
+  <Text style={styles.averageValue}>
+    {averageSBP} / {averageDBP} mmHg
+  </Text>
+</View>
       <Text style={styles.header}>Select Timeframe</Text>
       <Picker
         selectedValue={timeframe}
@@ -198,6 +204,13 @@ const styles = StyleSheet.create({
     height: 40,
     marginBottom: 20,
   },
+  averageValue: {
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#444",
+    marginTop: 5,
+  },
+  
 });
 
 const chartConfig = {

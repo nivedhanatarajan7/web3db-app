@@ -3,5 +3,6 @@ export type RootStackParamList = {
     tabs: undefined;
     heart: undefined;
     blood: undefined;
+    exercise: undefined;
   };
   
