@@ -39,7 +39,7 @@ export default function HomePage() {
         <Card style={styles.card}>
           <Card.Content>
             <View style={styles.row}>
-              <MaterialCommunityIcons name="bed" size={30} color="purple" />
+              <MaterialCommunityIcons name="heart" size={30} color="purple" />
               <Text style={styles.cardHeader}>Respiratory Health</Text>
             </View>
             <Text style={styles.label}>Tap to view respiratory health details.</Text>
