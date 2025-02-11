@@ -229,3 +229,4 @@ const chartConfig = {
   strokeWidth: 2,
   decimalPlaces: 0,
 };
+ 
