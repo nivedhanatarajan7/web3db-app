@@ -1,84 +1,110 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { LineChart } from "react-native-chart-kit";
-import axios
- from "axios";
-const auth = async () => {
-  return {
-    user: {
-      name: "Jane Doe",
-      email: "example@email.com",
-    },
-  };
-};
+import axios from "axios";
+import { Picker } from "@react-native-picker/picker";
 
 export default function BloodPressureScreen() {
-  const [sbp, setSbp] = useState<number[]>([]);
-  const [dbp, setDbp] = useState<number[]>([]);
+  const [sysValues, setSysValues] = useState<number[]>([]);
+  const [diaValues, setDiaValues] = useState<number[]>([]);
   const [timestamps, setTimestamps] = useState<number[]>([]);
   const [timeframe, setTimeframe] = useState<string>("last10");
 
-  const averageSBP = sbp.length > 0 ? (sbp.reduce((a, b) => a + b) / sbp.length).toFixed(1) : "No data";
-  const averageDBP = dbp.length > 0 ? (dbp.reduce((a, b) => a + b) / dbp.length).toFixed(1) : "No data";
-  
   useEffect(() => {
-    const fetchData = async () => {
-      // Fetch blood pressure
-      fetchBloodPressure();
+    fetchBloodPressure();
+  }, []);
 
+  useEffect(() => {
+    const sendBloodPressureData = async () => {
+      try {
+        const sys = Math.floor(Math.random() * (140 - 90 + 1)) + 90; // Random systolic (90-140)
+        const dia = Math.floor(Math.random() * (90 - 60 + 1)) + 60; // Random diastolic (60-90)
+        const timestamp = new Date().toISOString();
+
+        const data = {
+          type: "blood_pressure_new",
+          timestamp: timestamp,
+          sys: sys,
+          dia: dia,
+        };
+
+        console.log("Sending BP Data:", data);
+
+        await axios.post("http://75.131.29.55:5100/add-medical", data);
+
+        console.log("BP data sent successfully.");
+      } catch (error) {
+        console.error("Error sending BP data:", error);
+      }
     };
 
-    fetchData();
+    sendBloodPressureData();
+
+    const intervalId = setInterval(sendBloodPressureData, 10000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchBloodPressure = async () => {
-    const data = {
-      type: "blood_pressure",
-    };
-  
     try {
-      const response = await axios.post("http://75.131.29.55:5100/fetch-medical", data, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const response = await axios.post("http://75.131.29.55:5100/fetch-medical", {
+        type: "blood_pressure_new",
       });
-  
-      const bpData = JSON.parse(response.data); 
-  
-      if (bpData.length === 0) return; // Ensure data exists
-  
-      const sys = bpData.map((record: any) => parseFloat(record.sys)); 
-      const dia = bpData.map((record: any) => parseFloat(record.dia)); 
-      const newTimestamps = bpData.map(() => Date.now()); // Generate timestamps
-  
-      setSbp(sys);
-      setDbp(dia);
-      setTimestamps(newTimestamps); // Store timestamps
-  
+
+      console.log("Raw API Response:", response.data);
+
+      const bpData = JSON.parse(response.data);
+
+      if (bpData.length === 0) {
+        console.log("No BP data received.");
+        return;
+      }
+
+      console.log("Parsed Data:", bpData);
+
+      const newSysValues = bpData.map((record: any) => parseFloat(record.sys));
+      const newDiaValues = bpData.map((record: any) => parseFloat(record.dia));
+
+      const newTimestamps = bpData.map((record: any) => {
+        let timestamp = record.timestamp;
+
+        if (typeof timestamp === "string") {
+          timestamp = Date.parse(timestamp);
+        } else if (typeof timestamp === "number" && timestamp.toString().length === 10) {
+          timestamp = timestamp * 1000;
+        }
+
+        return timestamp;
+      });
+
+      console.log("Extracted Sys:", newSysValues);
+      console.log("Extracted Dia:", newDiaValues);
+      console.log("Extracted Timestamps:", newTimestamps);
+
+      setSysValues(newSysValues);
+      setDiaValues(newDiaValues);
+      setTimestamps(newTimestamps);
     } catch (error) {
       console.error("Error fetching BP data", error);
     }
   };
-  
 
-  // Function to filter data based on the selected timeframe
   const filterDataByTimeframe = (timeframe: string) => {
     const now = Date.now();
     let timeLimit: number;
 
     switch (timeframe) {
-      case "last5":
-        timeLimit = 5 * 60 * 1000; // 5 minutes
-        break;
-      case "last10":
-        timeLimit = 10 * 60 * 1000; // 10 minutes
-        break;
       case "last15":
-        timeLimit = 15 * 60 * 1000; // 15 minutes
+        timeLimit = 15 * 60 * 1000;
+        break;
+      case "last120":
+        timeLimit = 120 * 60 * 1000;
+        break;
+      case "last1440":
+        timeLimit = 1440 * 60 * 1000;
         break;
       default:
-        timeLimit = 10 * 60 * 1000; // Default to 10 minutes
+        timeLimit = 10 * 60 * 1000;
         break;
     }
 
@@ -86,62 +112,75 @@ export default function BloodPressureScreen() {
       .map((timestamp, index) => (now - timestamp <= timeLimit ? index : -1))
       .filter((index) => index !== -1);
 
-    const filteredSBP = filteredIndices.map((index) => sbp[index]);
-    const filteredDBP = filteredIndices.map((index) => dbp[index]);
-    const filteredTimestamps = filteredIndices
-      .map((index) => new Date(timestamps[index]).toLocaleTimeString())
-      .filter((_, i) => i % 3 === 0); // Show every 3rd timestamp
+    const filteredSys = filteredIndices.map((index) => sysValues[index]);
+    const filteredDia = filteredIndices.map((index) => diaValues[index]);
+    const filteredTimestamps = filteredIndices.map((index) =>
+      new Date(timestamps[index]).toLocaleTimeString("en-US", { hour12: false })
+    );
 
-    return { filteredSBP, filteredDBP, filteredTimestamps };
+    const maxPoints = 7;
+    if (filteredSys.length > maxPoints) {
+      const step = Math.floor(filteredSys.length / maxPoints);
+      return {
+        filteredSys: filteredSys.filter((_, i) => i % step === 0),
+        filteredDia: filteredDia.filter((_, i) => i % step === 0),
+        filteredTimestamps: filteredTimestamps.filter((_, i) => i % step === 0),
+      };
+    }
+
+    return { filteredSys, filteredDia, filteredTimestamps };
   };
 
-  const { filteredSBP, filteredDBP, filteredTimestamps } = filterDataByTimeframe(timeframe);
+  const { filteredSys, filteredDia, filteredTimestamps } = filterDataByTimeframe(timeframe);
+
+  const averageSys =
+    filteredSys.length > 0
+      ? (filteredSys.reduce((a, b) => a + b) / filteredSys.length).toFixed(1)
+      : "No data";
+
+  const averageDia =
+    filteredDia.length > 0
+      ? (filteredDia.reduce((a, b) => a + b) / filteredDia.length).toFixed(1)
+      : "No data";
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Blood Pressure Overview</Text>
+
       <View style={styles.card}>
-  <Text style={styles.label}>Current Blood Pressure</Text>
-  <Text style={styles.value}>
-    {sbp.length > 0 ? sbp[sbp.length - 1] : "No data"} /{" "}
-    {dbp.length > 0 ? dbp[dbp.length - 1] : "No data"} mmHg
-  </Text>
-  <Text style={styles.label}>Average Blood Pressure</Text>
-  <Text style={styles.averageValue}>
-    {averageSBP} / {averageDBP} mmHg
-  </Text>
-</View>
+        <Text style={styles.label}>Current BP</Text>
+        <Text style={styles.value}>
+          {sysValues.length > 0 && diaValues.length > 0
+            ? `${sysValues[sysValues.length - 1]}/${diaValues[diaValues.length - 1]}`
+            : "No data"}{" "}
+          mmHg
+        </Text>
+        <Text style={styles.label}>Average BP</Text>
+        <Text style={styles.averageValue}>
+          {averageSys}/{averageDia} mmHg
+        </Text>
+      </View>
+
       <Text style={styles.header}>Select Timeframe</Text>
       <Picker
         selectedValue={timeframe}
         style={styles.picker}
         onValueChange={(itemValue) => setTimeframe(itemValue)}
       >
-        <Picker.Item label="Last 5 Minutes" value="last5" />
-        <Picker.Item label="Last 10 Minutes" value="last10" />
         <Picker.Item label="Last 15 Minutes" value="last15" />
+        <Picker.Item label="Last 2 Hours" value="last120" />
+        <Picker.Item label="Last 24 Hours" value="last1440" />
       </Picker>
 
-      <Text style={styles.header}>Blood Pressure Trends</Text>
+      <Text style={styles.chartTitle}>Blood Pressure Trends</Text>
 
-      <Text style={styles.chartTitle}>Systolic Blood Pressure</Text>
       <LineChart
         data={{
-          labels: filteredTimestamps,
-          datasets: [{ data: filteredSBP }],
-        }}
-        width={Dimensions.get("window").width * 0.92}
-        height={280}
-        chartConfig={chartConfig}
-        bezier
-        style={styles.chart}
-      />
-
-      <Text style={styles.chartTitle}>Diastolic Blood Pressure</Text>
-      <LineChart
-        data={{
-          labels: filteredTimestamps,
-          datasets: [{ data: filteredDBP }],
+          labels: filteredTimestamps.length > 0 ? filteredTimestamps : ["No Data"],
+          datasets: [
+            { data: filteredSys.length > 0 ? filteredSys : [0], color: () => "#e63946", strokeWidth: 2 },
+            { data: filteredDia.length > 0 ? filteredDia : [0], color: () => "#457b9d", strokeWidth: 2 },
+          ],
         }}
         width={Dimensions.get("window").width * 0.92}
         height={280}
@@ -186,7 +225,7 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#0077b6",
+    color: "#e63946",
     marginTop: 5,
   },
   chartTitle: {
@@ -210,13 +249,12 @@ const styles = StyleSheet.create({
     color: "#444",
     marginTop: 5,
   },
-  
 });
 
 const chartConfig = {
   backgroundGradientFrom: "#f9fafb",
   backgroundGradientTo: "#f9fafb",
-  color: (opacity = 1) => `rgba(0, 119, 182, ${opacity})`, // Blue color for BP
+  color: (opacity = 1) => `rgba(230, 57, 70, ${opacity})`,
   labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
   strokeWidth: 2,
   decimalPlaces: 0,

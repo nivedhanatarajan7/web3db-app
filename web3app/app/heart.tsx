@@ -1,12 +1,10 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import axios from "axios";
-// import { AlertContext } from "../AlertContext";
 import { Picker } from "@react-native-picker/picker";
 
 export default function HeartRateScreen() {
-  // const { heartAlertsEnabled } = useContext(AlertContext);
   const [hrValues, setHrValues] = useState<number[]>([]);
   const [timestamps, setTimestamps] = useState<number[]>([]);
   const [timeframe, setTimeframe] = useState<string>("last10");
@@ -15,18 +13,73 @@ export default function HeartRateScreen() {
     fetchHeartRate();
   }, []);
 
+  useEffect(() => {
+    const sendHeartRateData = async () => {
+      try {
+        const heartRateValue = Math.floor(Math.random() * (100 - 60 + 1)) + 60; // Random HR between 60-100
+        const timestamp = new Date().toISOString(); // Current timestamp in ISO format
+  
+        const data = {
+          type: "heart_rate_new",
+          timestamp: timestamp,
+          value: heartRateValue,
+        };
+  
+        console.log("Sending Heart Rate Data:", data);
+  
+        await axios.post("http://75.131.29.55:5100/add-medical", data);
+  
+        console.log("Heart rate data sent successfully.");
+      } catch (error) {
+        console.error("Error sending heart rate data:", error);
+      }
+    };
+  
+    // Send initial data immediately
+    sendHeartRateData();
+  
+    // Set interval to send data every 5 minutes (300,000ms)
+    const intervalId = setInterval(sendHeartRateData, 10000);
+  
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
   const fetchHeartRate = async () => {
     try {
       const response = await axios.post("http://75.131.29.55:5100/fetch-medical", {
-        type: "heart_rate",
+        type: "heart_rate_new",
       });
+
+      console.log("Raw API Response:", response.data);
 
       const hrData = JSON.parse(response.data);
 
-      if (hrData.length === 0) return;
+      if (hrData.length === 0) {
+        console.log("No heart rate data received.");
+        return;
+      }
 
-      const newHrValues = hrData.map((record: any) => parseFloat(record.val));
-      const newTimestamps = hrData.map(() => Date.now()); // Generate timestamps
+      console.log("Parsed Data:", hrData);
+
+      // Extract and parse heart rate values
+      const newHrValues = hrData.map((record: any) => parseFloat(record.value));
+
+      // Extract and convert timestamps
+      const newTimestamps = hrData.map((record: any) => {
+        let timestamp = record.timestamp;
+
+        if (typeof timestamp === "string") {
+          timestamp = Date.parse(timestamp); // Convert ISO string to milliseconds
+        } else if (typeof timestamp === "number" && timestamp.toString().length === 10) {
+          timestamp = timestamp * 1000; // Convert seconds to milliseconds
+        }
+
+        return timestamp;
+      });
+
+      console.log("Extracted Values:", newHrValues);
+      console.log("Extracted Timestamps:", newTimestamps);
 
       setHrValues(newHrValues);
       setTimestamps(newTimestamps);
@@ -35,65 +88,77 @@ export default function HeartRateScreen() {
     }
   };
 
-  // Function to filter data based on the selected timeframe
   const filterDataByTimeframe = (timeframe: string) => {
     const now = Date.now();
     let timeLimit: number;
-
+  
     switch (timeframe) {
-      case "last5":
-        timeLimit = 5 * 60 * 1000; // 5 minutes
-        break;
-      case "last10":
-        timeLimit = 10 * 60 * 1000; // 10 minutes
-        break;
       case "last15":
         timeLimit = 15 * 60 * 1000; // 15 minutes
         break;
+      case "last120":
+        timeLimit = 120 * 60 * 1000; // 2 hours
+        break;
+      case "last1440":
+        timeLimit = 1440 * 60 * 1000; // 24 hours
+        break;
       default:
-        timeLimit = 10 * 60 * 1000; // Default to 10 minutes
+        timeLimit = 10 * 60 * 1000; // Default: 10 minutes
         break;
     }
-
+  
+    // Filter indices based on timeframe
     const filteredIndices = timestamps
       .map((timestamp, index) => (now - timestamp <= timeLimit ? index : -1))
       .filter((index) => index !== -1);
-
+  
     const filteredHR = filteredIndices.map((index) => hrValues[index]);
-    const filteredTimestamps = filteredIndices
-      .map((index) => new Date(timestamps[index]).toLocaleTimeString())
-      .filter((_, i) => i % 3 === 0); // Show every 3rd timestamp
-
+    const filteredTimestamps = filteredIndices.map((index) =>
+      new Date(timestamps[index]).toLocaleTimeString("en-US", { hour12: false })
+    );
+  
+    // Limit the number of points to a maximum of 7
+    const maxPoints = 7;
+    if (filteredHR.length > maxPoints) {
+      const step = Math.floor(filteredHR.length / maxPoints);
+      const downsampledHR = filteredHR.filter((_, i) => i % step === 0);
+      const downsampledTimestamps = filteredTimestamps.filter((_, i) => i % step === 0);
+      return { filteredHR: downsampledHR, filteredTimestamps: downsampledTimestamps };
+    }
+  
     return { filteredHR, filteredTimestamps };
   };
+  
 
   const { filteredHR, filteredTimestamps } = filterDataByTimeframe(timeframe);
 
   const averageHeartRate =
-    filteredHR.length > 0 ? (filteredHR.reduce((a, b) => a + b) / filteredHR.length).toFixed(1) : "No data";
+    filteredHR.length > 0
+      ? (filteredHR.reduce((a, b) => a + b) / filteredHR.length).toFixed(1)
+      : "No data";
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Heart Rate Overview</Text>
-          <View style={styles.card}>
+
+      <View style={styles.card}>
         <Text style={styles.label}>Current Heart Rate</Text>
         <Text style={styles.value}>
           {hrValues.length > 0 ? hrValues[hrValues.length - 1] : "No data"} bpm
         </Text>
         <Text style={styles.label}>Average Heart Rate</Text>
-        <Text style={styles.averageValue}>
-          {averageHeartRate} bpm
-        </Text>
+        <Text style={styles.averageValue}>{averageHeartRate} bpm</Text>
       </View>
+
       <Text style={styles.header}>Select Timeframe</Text>
       <Picker
         selectedValue={timeframe}
         style={styles.picker}
         onValueChange={(itemValue) => setTimeframe(itemValue)}
       >
-        <Picker.Item label="Last 5 Minutes" value="last5" />
-        <Picker.Item label="Last 10 Minutes" value="last10" />
         <Picker.Item label="Last 15 Minutes" value="last15" />
+        <Picker.Item label="Last 2 Hours" value="last120" />
+        <Picker.Item label="Last 24 Hours" value="last1440" />
       </Picker>
 
       <Text style={styles.chartTitle}>Heart Rate Trends</Text>
@@ -170,7 +235,6 @@ const styles = StyleSheet.create({
     color: "#444",
     marginTop: 5,
   },
-  
 });
 
 const chartConfig = {
