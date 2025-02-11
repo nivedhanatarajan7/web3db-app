@@ -20,7 +20,7 @@ export default function RespiratoryRateScreen() {
         const timestamp = new Date().toISOString();
 
         const data = {
-          type: "resp_rate_new",
+          type: "respiratory_rate",
           timestamp: timestamp,
           value: respRateValue,
         };
@@ -42,7 +42,7 @@ export default function RespiratoryRateScreen() {
   const fetchRespiratoryRate = async () => {
     try {
       const response = await axios.post("http://75.131.29.55:5100/fetch-medical", {
-        type: "resp_rate_new",
+        type: "respiratory_rate",
       });
 
       console.log("Raw API Response:", response.data);
