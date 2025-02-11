@@ -22,7 +22,7 @@ export default function BloodPressureScreen() {
         const timestamp = new Date().toISOString();
 
         const data = {
-          type: "blood_pressure_new",
+          type: "blood_pressure",
           timestamp: timestamp,
           sys: sys,
           dia: dia,
@@ -48,7 +48,7 @@ export default function BloodPressureScreen() {
   const fetchBloodPressure = async () => {
     try {
       const response = await axios.post("http://75.131.29.55:5100/fetch-medical", {
-        type: "blood_pressure_new",
+        type: "blood_pressure",
       });
 
       console.log("Raw API Response:", response.data);

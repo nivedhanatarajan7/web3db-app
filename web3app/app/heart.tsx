@@ -20,7 +20,7 @@ export default function HeartRateScreen() {
         const timestamp = new Date().toISOString(); // Current timestamp in ISO format
   
         const data = {
-          type: "heart_rate_new",
+          type: "heart_rate",
           timestamp: timestamp,
           value: heartRateValue,
         };
@@ -48,7 +48,7 @@ export default function HeartRateScreen() {
   const fetchHeartRate = async () => {
     try {
       const response = await axios.post("http://75.131.29.55:5100/fetch-medical", {
-        type: "heart_rate_new",
+        type: "heart_rate",
       });
 
       console.log("Raw API Response:", response.data);

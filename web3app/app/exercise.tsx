@@ -5,8 +5,9 @@ import axios from "axios";
 import { Picker } from "@react-native-picker/picker";
 
 export default function ExerciseScreen() {
-  const [stepsData, setStepsData] = useState<{ date: string; value: number }[]>([]);
-  const [caloriesData, setCaloriesData] = useState<{ date: string; value: number }[]>([]);
+  const [steps, setSteps] = useState<number[]>([]);
+  const [calories, setCalories] = useState<number[]>([]);
+  const [dates, setDates] = useState<string[]>([]);
   const [timeframe, setTimeframe] = useState<string>("last7");
 
   useEffect(() => {
@@ -16,80 +17,86 @@ export default function ExerciseScreen() {
   const fetchExerciseData = async () => {
     try {
       const response = await axios.post("http://75.131.29.55:5100/fetch-medical", {
-        type: "exercise_new",
+        type: "exercise",
       });
-
-      console.log("Raw API Response:", response.data);
-
-      const exerciseData = JSON.parse(response.data);
-
-      if (exerciseData.length === 0) {
-        console.log("No exercise data received.");
+  
+      console.log("Raw Exercise Data Response:", response.data);
+  
+      const data = JSON.parse(response.data);
+  
+      if (data.length === 0) {
+        console.log("No exercise data available.");
         return;
       }
-
-      console.log("Parsed Data:", exerciseData);
-
-      // Process data: Extract steps & calories, group by date (only one per day)
-      const groupedData: { [date: string]: { steps: number; calories: number } } = {};
-
-      exerciseData.forEach((record: any) => {
-        const date = new Date(record.timestamp).toISOString().split("T")[0]; // Extract YYYY-MM-DD
-        if (!groupedData[date]) {
-          groupedData[date] = { steps: 0, calories: 0 };
+  
+      // Group data by date
+      const dailyData: Record<string, { steps: number; calories: number }> = {};
+  
+      data.forEach((record: any) => {
+        const date = new Date(record.timestamp).toLocaleDateString();
+  
+        if (!dailyData[date]) {
+          dailyData[date] = { steps: 0, calories: 0 };
         }
-        if (record.steps) groupedData[date].steps = record.steps;
-        if (record.calories) groupedData[date].calories = record.calories;
+  
+        dailyData[date].steps += parseInt(record.steps);
+        dailyData[date].calories += parseInt(record.calories);
       });
-
-      const stepsArray = Object.keys(groupedData).map((date) => ({
-        date,
-        value: groupedData[date].steps,
-      }));
-
-      const caloriesArray = Object.keys(groupedData).map((date) => ({
-        date,
-        value: groupedData[date].calories,
-      }));
-
-      console.log("Processed Steps Data:", stepsArray);
-      console.log("Processed Calories Data:", caloriesArray);
-
-      setStepsData(stepsArray);
-      setCaloriesData(caloriesArray);
+  
+      // Sort dates in ascending order
+      const sortedDates = Object.keys(dailyData).sort(
+        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+      );
+  
+      // Extract sorted steps and calories
+      const sortedSteps = sortedDates.map((date) => dailyData[date].steps);
+      const sortedCalories = sortedDates.map((date) => dailyData[date].calories);
+  
+      console.log("Sorted Steps Data:", sortedSteps);
+      console.log("Sorted Calories Data:", sortedCalories);
+      console.log("Sorted Dates:", sortedDates);
+  
+      setSteps(sortedSteps);
+      setCalories(sortedCalories);
+      setDates(sortedDates);
     } catch (error) {
       console.error("Error fetching exercise data", error);
     }
   };
-
-  // Function to filter and limit data points
-  const filterDataByTimeframe = (data: { date: string; value: number }[], days: number) => {
+  
+  const filterDataByTimeframe = (timeframe: string) => {
     const now = new Date();
-    now.setHours(0, 0, 0, 0); // Set time to start of the day
+    let daysLimit: number;
 
-    return data
-      .filter((entry) => {
-        const entryDate = new Date(entry.date);
-        return now.getTime() - entryDate.getTime() <= days * 24 * 60 * 60 * 1000;
-      })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date
-  };
-
-  const getFilteredData = (timeframe: string) => {
     switch (timeframe) {
-      case "last14":
-        return { steps: filterDataByTimeframe(stepsData, 14), calories: filterDataByTimeframe(caloriesData, 14) };
+      case "last7":
+        daysLimit = 7;
+        break;
       case "last30":
-        return { steps: filterDataByTimeframe(stepsData, 30), calories: filterDataByTimeframe(caloriesData, 30) };
+        daysLimit = 30;
+        break;
+      case "last90":
+        daysLimit = 90;
+        break;
       default:
-        return { steps: filterDataByTimeframe(stepsData, 7), calories: filterDataByTimeframe(caloriesData, 7) };
+        daysLimit = 7;
     }
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(now.getDate() - daysLimit);
+
+    const filteredIndices = dates
+      .map((date, index) => (new Date(date) >= cutoffDate ? index : -1))
+      .filter((index) => index !== -1);
+
+    return {
+      filteredSteps: filteredIndices.map((index) => steps[index]),
+      filteredCalories: filteredIndices.map((index) => calories[index]),
+      filteredDates: filteredIndices.map((index) => dates[index]),
+    };
   };
 
-  const { steps, calories } = getFilteredData(timeframe);
-
-  const avgSteps = steps.length > 0 ? (steps.reduce((sum, d) => sum + d.value, 0) / steps.length).toFixed(0) : "No data";
-  const avgCalories = calories.length > 0 ? (calories.reduce((sum, d) => sum + d.value, 0) / calories.length).toFixed(0) : "No data";
+  const { filteredSteps, filteredCalories, filteredDates } = filterDataByTimeframe(timeframe);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -97,52 +104,55 @@ export default function ExerciseScreen() {
 
       {/* Steps Card */}
       <View style={styles.card}>
-        <Text style={styles.label}>Steps Taken</Text>
-        <Text style={styles.value}>{steps.length > 0 ? steps[steps.length - 1].value : "No data"} steps</Text>
-        <Text style={styles.label}>Average Steps</Text>
-        <Text style={styles.averageValue}>{avgSteps} steps</Text>
+        <Text style={styles.label}>Total Steps</Text>
+        <Text style={styles.value}>
+          {steps.length > 0 ? steps[steps.length - 1] : "No data"} steps
+        </Text>
       </View>
 
       {/* Calories Card */}
       <View style={styles.card}>
         <Text style={styles.label}>Calories Burned</Text>
-        <Text style={styles.value}>{calories.length > 0 ? calories[calories.length - 1].value : "No data"} kcal</Text>
-        <Text style={styles.label}>Average Calories</Text>
-        <Text style={styles.averageValue}>{avgCalories} kcal</Text>
+        <Text style={styles.value}>
+          {calories.length > 0 ? calories[calories.length - 1] : "No data"} kcal
+        </Text>
       </View>
 
-      {/* Timeframe Picker */}
       <Text style={styles.header}>Select Timeframe</Text>
-      <Picker selectedValue={timeframe} style={styles.picker} onValueChange={(itemValue) => setTimeframe(itemValue)}>
+      <Picker
+        selectedValue={timeframe}
+        style={styles.picker}
+        onValueChange={(itemValue) => setTimeframe(itemValue)}
+      >
         <Picker.Item label="Last 7 Days" value="last7" />
-        <Picker.Item label="Last 14 Days" value="last14" />
         <Picker.Item label="Last 30 Days" value="last30" />
+        <Picker.Item label="Last 90 Days" value="last90" />
       </Picker>
 
       {/* Steps Graph */}
-      <Text style={styles.chartTitle}>Steps Trend</Text>
+      <Text style={styles.chartTitle}>Steps Over Time</Text>
       <LineChart
         data={{
-          labels: steps.map((d) => d.date.split("-").slice(1).join("/")), // Show MM/DD
-          datasets: [{ data: steps.map((d) => d.value) }],
+          labels: filteredDates.length > 0 ? filteredDates : ["No Data"],
+          datasets: [{ data: filteredSteps.length > 0 ? filteredSteps : [0] }],
         }}
         width={Dimensions.get("window").width * 0.92}
         height={280}
-        chartConfig={chartConfigSteps}
+        chartConfig={chartConfig}
         bezier
         style={styles.chart}
       />
 
       {/* Calories Graph */}
-      <Text style={styles.chartTitle}>Calories Burned Trend</Text>
+      <Text style={styles.chartTitle}>Calories Burned Over Time</Text>
       <LineChart
         data={{
-          labels: calories.map((d) => d.date.split("-").slice(1).join("/")), // Show MM/DD
-          datasets: [{ data: calories.map((d) => d.value) }],
+          labels: filteredDates.length > 0 ? filteredDates : ["No Data"],
+          datasets: [{ data: filteredCalories.length > 0 ? filteredCalories : [0] }],
         }}
         width={Dimensions.get("window").width * 0.92}
         height={280}
-        chartConfig={chartConfigCalories}
+        chartConfig={chartConfig}
         bezier
         style={styles.chart}
       />
@@ -183,13 +193,7 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#3498db",
-    marginTop: 5,
-  },
-  averageValue: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#444",
+    color: "#007bff",
     marginTop: 5,
   },
   chartTitle: {
@@ -209,10 +213,11 @@ const styles = StyleSheet.create({
   },
 });
 
-const chartConfigSteps = {
-  color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
-};
-
-const chartConfigCalories = {
-  color: (opacity = 1) => `rgba(230, 126, 34, ${opacity})`,
+const chartConfig = {
+  backgroundGradientFrom: "#f9fafb",
+  backgroundGradientTo: "#f9fafb",
+  color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+  strokeWidth: 2,
+  decimalPlaces: 0,
 };
