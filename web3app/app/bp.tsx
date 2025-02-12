@@ -14,37 +14,6 @@ export default function BloodPressureScreen() {
     fetchBloodPressure();
   }, []);
 
-  useEffect(() => {
-    const sendBloodPressureData = async () => {
-      try {
-        const sys = Math.floor(Math.random() * (140 - 90 + 1)) + 90; // Random systolic (90-140)
-        const dia = Math.floor(Math.random() * (90 - 60 + 1)) + 60; // Random diastolic (60-90)
-        const timestamp = new Date().toISOString();
-
-        const data = {
-          type: "blood_pressure",
-          timestamp: timestamp,
-          sys: sys,
-          dia: dia,
-        };
-
-        console.log("Sending BP Data:", data);
-
-        await axios.post("http://75.131.29.55:5100/add-medical", data);
-
-        console.log("BP data sent successfully.");
-      } catch (error) {
-        console.error("Error sending BP data:", error);
-      }
-    };
-
-    sendBloodPressureData();
-
-    const intervalId = setInterval(sendBloodPressureData, 10000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
   const fetchBloodPressure = async () => {
     try {
       const response = await axios.post("http://75.131.29.55:5100/fetch-medical", {

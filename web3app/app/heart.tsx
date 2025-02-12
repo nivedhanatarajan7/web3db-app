@@ -13,37 +13,6 @@ export default function HeartRateScreen() {
     fetchHeartRate();
   }, []);
 
-  useEffect(() => {
-    const sendHeartRateData = async () => {
-      try {
-        const heartRateValue = Math.floor(Math.random() * (100 - 60 + 1)) + 60; // Random HR between 60-100
-        const timestamp = new Date().toISOString(); // Current timestamp in ISO format
-  
-        const data = {
-          type: "heart_rate",
-          timestamp: timestamp,
-          value: heartRateValue,
-        };
-  
-        console.log("Sending Heart Rate Data:", data);
-  
-        await axios.post("http://75.131.29.55:5100/add-medical", data);
-  
-        console.log("Heart rate data sent successfully.");
-      } catch (error) {
-        console.error("Error sending heart rate data:", error);
-      }
-    };
-  
-    // Send initial data immediately
-    sendHeartRateData();
-  
-    // Set interval to send data every 5 minutes (300,000ms)
-    const intervalId = setInterval(sendHeartRateData, 10000);
-  
-    // Cleanup interval on unmount
-    return () => clearInterval(intervalId);
-  }, []);
 
   const fetchHeartRate = async () => {
     try {

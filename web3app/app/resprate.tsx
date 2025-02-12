@@ -13,32 +13,6 @@ export default function RespiratoryRateScreen() {
     fetchRespiratoryRate();
   }, []);
 
-  useEffect(() => {
-    const sendRespiratoryRateData = async () => {
-      try {
-        const respRateValue = Math.floor(Math.random() * (25 - 12 + 1)) + 12; // Random RR between 12-25
-        const timestamp = new Date().toISOString();
-
-        const data = {
-          type: "respiratory_rate",
-          timestamp: timestamp,
-          value: respRateValue,
-        };
-
-        console.log("Sending Respiratory Rate Data:", data);
-        await axios.post("http://75.131.29.55:5100/add-medical", data);
-        console.log("Respiratory rate data sent successfully.");
-      } catch (error) {
-        console.error("Error sending respiratory rate data:", error);
-      }
-    };
-
-    sendRespiratoryRateData();
-    const intervalId = setInterval(sendRespiratoryRateData, 10000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
   const fetchRespiratoryRate = async () => {
     try {
       const response = await axios.post("http://75.131.29.55:5100/fetch-medical", {
