@@ -37,15 +37,19 @@ export default function HeartRateScreen() {
       // Extract and convert timestamps
       const newTimestamps = hrData.map((record: any) => {
         let timestamp = record.timestamp;
-
+      
         if (typeof timestamp === "string") {
-          timestamp = Date.parse(timestamp); // Convert ISO string to milliseconds
-        } else if (typeof timestamp === "number" && timestamp.toString().length === 10) {
+          timestamp = parseFloat(timestamp) * 1000; // Convert string float seconds to milliseconds
+        } else if (typeof timestamp === "number") {
           timestamp = timestamp * 1000; // Convert seconds to milliseconds
+        } else {
+          console.warn("Invalid timestamp format:", timestamp);
+          return NaN;
         }
-
+      
         return timestamp;
-      });
+      }).filter((ts: any) => !isNaN(ts)); // Remove NaN values
+      
 
       console.log("Extracted Values:", newHrValues);
       console.log("Extracted Timestamps:", newTimestamps);
