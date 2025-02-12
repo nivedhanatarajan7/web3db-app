@@ -31,6 +31,7 @@
     "@rneui/themed": "^4.0.0-rc.8",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
+    "ethers": "^6.13.5",
     "expo": "~52.0.19",
     "expo-blur": "~14.0.1",
     "expo-constants": "~17.0.3",

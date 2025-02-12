@@ -1,21 +1,36 @@
 import React, { useContext } from "react";
-import { View, Text, StyleSheet, ScrollView, Switch, Button } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Switch } from "react-native";
 import { Card } from "react-native-paper";
 import { MaterialCommunityIcons } from "react-native-vector-icons";
-import { AlertContext } from '../AlertContext'; // Adjust the path as needed
+import { useAuth } from "../AuthContext";
+import { AlertContext } from "../AlertContext";
 
-export default function ProfilePage({ navigation }: any) {
-  
+export default function ProfileScreen() {
+  const { walletInfo } = useAuth();
   const { heartAlertsEnabled, setHeartAlertsEnabled } = useContext(AlertContext);
   const { bpAlertsEnabled, setBPAlertsEnabled } = useContext(AlertContext);
-
-  const toggleHeartAlerts = () => setHeartAlertsEnabled(!heartAlertsEnabled);
-  const toggleBPAlerts = () => setBPAlertsEnabled(!bpAlertsEnabled);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Profile</Text>
 
+      {/* Wallet Information */}
+      <Card style={styles.card}>
+        <Card.Content>
+          <View style={styles.cardHeader}>
+            <MaterialCommunityIcons name="wallet" size={30} color="#007bff" />
+            <Text style={styles.cardTitle}>Wallet Information</Text>
+          </View>
+          <Text style={styles.label}>Status:  
+            <Text style={walletInfo.connected ? styles.connected : styles.disconnected}>
+              {walletInfo.connected ? " Connected ✅" : " Not Connected ❌"}
+            </Text>
+          </Text>
+          <Text style={styles.label}>Address: {walletInfo.connected ? walletInfo.address : "N/A"}</Text>
+        </Card.Content>
+      </Card>
+
+      {/* Personal Information */}
       <Card style={styles.card}>
         <Card.Content>
           <View style={styles.cardHeader}>
@@ -29,6 +44,7 @@ export default function ProfilePage({ navigation }: any) {
         </Card.Content>
       </Card>
 
+      {/* Alert Settings */}
       <Card style={styles.card}>
         <Card.Content>
           <View style={styles.cardHeader}>
@@ -37,11 +53,11 @@ export default function ProfilePage({ navigation }: any) {
           </View>
           <View style={styles.settingRow}>
             <Text style={styles.settingLabel}>Heart Alerts</Text>
-            <Switch value={heartAlertsEnabled} onValueChange={toggleHeartAlerts} />
+            <Switch value={heartAlertsEnabled} onValueChange={() => setHeartAlertsEnabled(!heartAlertsEnabled)} />
           </View>
           <View style={styles.settingRow}>
             <Text style={styles.settingLabel}>Blood Pressure Alerts</Text>
-            <Switch value={bpAlertsEnabled} onValueChange={toggleBPAlerts} />
+            <Switch value={bpAlertsEnabled} onValueChange={() => setBPAlertsEnabled(!bpAlertsEnabled)} />
           </View>
         </Card.Content>
       </Card>
@@ -90,5 +106,13 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 16,
+  },
+  connected: {
+    color: "green",
+    fontWeight: "bold",
+  },
+  disconnected: {
+    color: "red",
+    fontWeight: "bold",
   },
 });
