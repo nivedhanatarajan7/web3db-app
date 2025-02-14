@@ -10,7 +10,13 @@ export default function HeartRateScreen() {
   const [timeframe, setTimeframe] = useState<string>("last10");
 
   useEffect(() => {
-    fetchHeartRate();
+    fetchHeartRate(); // Fetch initially
+  
+    const interval = setInterval(() => {
+      fetchHeartRate();
+    }, 10000); // Fetch data every 10 seconds
+  
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, []);
 
 
