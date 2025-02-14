@@ -86,9 +86,9 @@ export default function HeartRateScreen() {
         break;
     }
   
-    // Filter indices based on timeframe
+    // Filter indices based on timeframe and exclude future timestamps
     const filteredIndices = timestamps
-      .map((timestamp, index) => (now - timestamp <= timeLimit ? index : -1))
+      .map((timestamp, index) => (now - timestamp <= timeLimit && timestamp <= now ? index : -1)) // Ensure timestamp is in the past
       .filter((index) => index !== -1);
   
     const filteredHR = filteredIndices.map((index) => hrValues[index]);

@@ -69,44 +69,46 @@ export default function BloodPressureScreen() {
   const filterDataByTimeframe = (timeframe: string) => {
     const now = Date.now();
     let timeLimit: number;
-
+  
     switch (timeframe) {
       case "last15":
-        timeLimit = 15 * 60 * 1000;
+        timeLimit = 15 * 60 * 1000; // 15 minutes
         break;
       case "last120":
-        timeLimit = 120 * 60 * 1000;
+        timeLimit = 120 * 60 * 1000; // 2 hours
         break;
       case "last1440":
-        timeLimit = 1440 * 60 * 1000;
+        timeLimit = 1440 * 60 * 1000; // 24 hours
         break;
       default:
-        timeLimit = 10 * 60 * 1000;
+        timeLimit = 10 * 60 * 1000; // Default: 10 minutes
         break;
     }
-
+  
+    // Filter indices based on timeframe and ensure timestamps are in the past
     const filteredIndices = timestamps
-      .map((timestamp, index) => (now - timestamp <= timeLimit ? index : -1))
+      .map((timestamp, index) => (now - timestamp <= timeLimit && timestamp <= now ? index : -1))
       .filter((index) => index !== -1);
-
+  
     const filteredSys = filteredIndices.map((index) => sysValues[index]);
     const filteredDia = filteredIndices.map((index) => diaValues[index]);
     const filteredTimestamps = filteredIndices.map((index) =>
       new Date(timestamps[index]).toLocaleTimeString("en-US", { hour12: false })
     );
-
+  
+    // Limit the number of points to a maximum of 7 for readability
     const maxPoints = 7;
     if (filteredSys.length > maxPoints) {
       const step = Math.floor(filteredSys.length / maxPoints);
-      return {
-        filteredSys: filteredSys.filter((_, i) => i % step === 0),
-        filteredDia: filteredDia.filter((_, i) => i % step === 0),
-        filteredTimestamps: filteredTimestamps.filter((_, i) => i % step === 0),
-      };
+      const downsampledSys = filteredSys.filter((_, i) => i % step === 0);
+      const downsampledDia = filteredDia.filter((_, i) => i % step === 0);
+      const downsampledTimestamps = filteredTimestamps.filter((_, i) => i % step === 0);
+      return { filteredSys: downsampledSys, filteredDia: downsampledDia, filteredTimestamps: downsampledTimestamps };
     }
-
+  
     return { filteredSys, filteredDia, filteredTimestamps };
   };
+  
 
   const { filteredSys, filteredDia, filteredTimestamps } = filterDataByTimeframe(timeframe);
 
