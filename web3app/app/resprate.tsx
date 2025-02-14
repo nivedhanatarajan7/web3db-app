@@ -9,8 +9,14 @@ export default function RespiratoryRateScreen() {
   const [timestamps, setTimestamps] = useState<number[]>([]);
   const [timeframe, setTimeframe] = useState<string>("last10");
 
-  useEffect(() => {
-    fetchRespiratoryRate();
+useEffect(() => {
+    fetchRespiratoryRate(); // Fetch initially
+  
+    const interval = setInterval(() => {
+      fetchRespiratoryRate();
+    }, 10000); // Fetch data every 10 seconds
+  
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, []);
 
   const fetchRespiratoryRate = async () => {

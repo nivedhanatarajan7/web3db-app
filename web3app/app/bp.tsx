@@ -10,8 +10,14 @@ export default function BloodPressureScreen() {
   const [timestamps, setTimestamps] = useState<number[]>([]);
   const [timeframe, setTimeframe] = useState<string>("last10");
 
-  useEffect(() => {
-    fetchBloodPressure();
+ useEffect(() => {
+    fetchBloodPressure(); // Fetch initially
+  
+    const interval = setInterval(() => {
+      fetchBloodPressure();
+    }, 10000); // Fetch data every 10 seconds
+  
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, []);
 
   const fetchBloodPressure = async () => {
