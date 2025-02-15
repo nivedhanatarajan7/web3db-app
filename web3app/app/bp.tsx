@@ -85,29 +85,35 @@ export default function BloodPressureScreen() {
         break;
     }
   
-    // Filter indices based on timeframe and ensure timestamps are in the past
-    const filteredIndices = timestamps
-      .map((timestamp, index) => (now - timestamp <= timeLimit && timestamp <= now ? index : -1))
-      .filter((index) => index !== -1);
+    // Filter and sort data
+    let filteredData = timestamps
+      .map((timestamp, index) => ({
+        timestamp,
+        sys: sysValues[index],
+        dia: diaValues[index],
+      }))
+      .filter((data) => now - data.timestamp <= timeLimit && data.timestamp <= now) // Keep only valid data
+      .sort((a, b) => a.timestamp - b.timestamp); // Sort timestamps in ascending order
   
-    const filteredSys = filteredIndices.map((index) => sysValues[index]);
-    const filteredDia = filteredIndices.map((index) => diaValues[index]);
-    const filteredTimestamps = filteredIndices.map((index) =>
-      new Date(timestamps[index]).toLocaleTimeString("en-US", { hour12: false })
+    // Extract sorted data
+    let filteredSys = filteredData.map((data) => data.sys);
+    let filteredDia = filteredData.map((data) => data.dia);
+    let filteredTimestamps = filteredData.map((data) =>
+      new Date(data.timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })
     );
   
-    // Limit the number of points to a maximum of 7 for readability
+    // Ensure at most 7 points for a readable graph
     const maxPoints = 7;
     if (filteredSys.length > maxPoints) {
       const step = Math.floor(filteredSys.length / maxPoints);
-      const downsampledSys = filteredSys.filter((_, i) => i % step === 0);
-      const downsampledDia = filteredDia.filter((_, i) => i % step === 0);
-      const downsampledTimestamps = filteredTimestamps.filter((_, i) => i % step === 0);
-      return { filteredSys: downsampledSys, filteredDia: downsampledDia, filteredTimestamps: downsampledTimestamps };
+      filteredSys = filteredSys.filter((_, i) => i % step === 0);
+      filteredDia = filteredDia.filter((_, i) => i % step === 0);
+      filteredTimestamps = filteredTimestamps.filter((_, i) => i % step === 0);
     }
   
     return { filteredSys, filteredDia, filteredTimestamps };
   };
+  
   
 
   const { filteredSys, filteredDia, filteredTimestamps } = filterDataByTimeframe(timeframe);

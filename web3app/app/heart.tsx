@@ -86,27 +86,32 @@ export default function HeartRateScreen() {
         break;
     }
   
-    // Filter indices based on timeframe and exclude future timestamps
-    const filteredIndices = timestamps
-      .map((timestamp, index) => (now - timestamp <= timeLimit && timestamp <= now ? index : -1)) // Ensure timestamp is in the past
-      .filter((index) => index !== -1);
+    // Filter and sort data
+    let filteredData = timestamps
+      .map((timestamp, index) => ({
+        timestamp,
+        value: hrValues[index],
+      }))
+      .filter((data) => now - data.timestamp <= timeLimit && data.timestamp <= now) // Keep only valid data within range
+      .sort((a, b) => a.timestamp - b.timestamp); // Sort by timestamp (ascending)
   
-    const filteredHR = filteredIndices.map((index) => hrValues[index]);
-    const filteredTimestamps = filteredIndices.map((index) =>
-      new Date(timestamps[index]).toLocaleTimeString("en-US", { hour12: false })
+    // Extract sorted timestamps and HR values
+    let filteredHR = filteredData.map((data) => data.value);
+    let filteredTimestamps = filteredData.map((data) =>
+      new Date(data.timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })
     );
   
-    // Limit the number of points to a maximum of 7
+    // Ensure at most 7 points for a readable graph
     const maxPoints = 7;
     if (filteredHR.length > maxPoints) {
       const step = Math.floor(filteredHR.length / maxPoints);
-      const downsampledHR = filteredHR.filter((_, i) => i % step === 0);
-      const downsampledTimestamps = filteredTimestamps.filter((_, i) => i % step === 0);
-      return { filteredHR: downsampledHR, filteredTimestamps: downsampledTimestamps };
+      filteredHR = filteredHR.filter((_, i) => i % step === 0);
+      filteredTimestamps = filteredTimestamps.filter((_, i) => i % step === 0);
     }
   
     return { filteredHR, filteredTimestamps };
   };
+  
   
 
   const { filteredHR, filteredTimestamps } = filterDataByTimeframe(timeframe);
