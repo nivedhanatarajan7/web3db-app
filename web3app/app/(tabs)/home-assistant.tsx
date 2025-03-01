@@ -109,9 +109,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   rowsContainer: {
+    flex: 1,
     flexDirection: 'column',
     justifyContent: 'space-between',
     width: '100%',
+    paddingBottom: 20, // Add some space at the bottom
   },
   outerContainer: {
     flexDirection: 'row',
@@ -126,7 +128,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   innerContainerTitle: {
-    fontSize: 20,
+    fontSize: 16,
+    paddingLeft: 15,
     fontWeight: 'bold',
     marginBottom: 10,
   },
@@ -152,11 +155,11 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   mainText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   subText: {
-    fontSize: 14,
+    fontSize: 12,
     color: 'gray',
   },
   modalContainer: {
