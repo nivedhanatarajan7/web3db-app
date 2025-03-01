@@ -41,6 +41,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Icon source="star" size={30} color="gray"/>
         }}
       />
+      <Tabs.Screen
+        name="home-assistant"
+        options={{
+          title: 'Home Assistant',
+          tabBarIcon: ({ color }) => <Icon source="assistant" size={30} color="gray"/>
+        }}
+      />
     </Tabs>
   );
 }
