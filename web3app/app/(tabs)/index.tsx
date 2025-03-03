@@ -41,7 +41,7 @@ export default function HomePage() {
       setLoading(true);
 
       const response = await axios.post(
-        "http://129.74.152.201:5100/get-medical",
+        "http://75.131.29.55:5100/get-medical",
         {
           time: "2 days",
           topic: "data_type",
@@ -104,7 +104,7 @@ export default function HomePage() {
 
     try {
       setLoading(true);
-      const response = await fetch("http://129.74.152.201:5100/add-medical", {
+      const response = await fetch("http://75.131.29.55:5100/add-medical", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newEntry),
