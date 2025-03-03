@@ -87,21 +87,22 @@ export default function HomePage() {
   }, []);
 
   const addDataType = async () => {
-    if (
-      !newDataType.trim() ||
-      !selectedCategory.trim() ||
-      !measurement.trim()
-    ) {
+    if (!newDataType.trim() || !(customCategory ? newCategory.trim() : selectedCategory.trim()) || !measurement.trim()) {
       return Alert.alert("Error", "Please fill in all fields!");
     }
-
+  
+    const categoryToUse = customCategory ? newCategory : selectedCategory;
     const newEntry = {
-      type: "data_type",
-      value: newDataType,
-      category: selectedCategory,
-      measurement: measurement,
+      topic: "data_type",
+      payload: {
+        value: newDataType,
+        category: categoryToUse,
+        measurement: measurement,
+      }
     };
-
+  
+    console.log("Adding Data Type:", newEntry); // Debugging log
+  
     try {
       setLoading(true);
       const response = await fetch("http://75.131.29.55:5100/add-medical", {
@@ -109,38 +110,47 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newEntry),
       });
-
+  
+      const responseData = await response.json(); // Read response
+  
       if (response.ok) {
+        console.log("Response from server:", responseData); // Debugging log
+  
         Alert.alert("Success", "New data type added!");
-
+  
         setCategories((prevCategories) => {
           const updatedCategories = { ...prevCategories };
-          if (!updatedCategories[selectedCategory]) {
-            updatedCategories[selectedCategory] = [];
+          if (!updatedCategories[categoryToUse]) {
+            updatedCategories[categoryToUse] = [];
           }
-          updatedCategories[selectedCategory].push({
+          updatedCategories[categoryToUse].push({
             value: newDataType,
             measurement: measurement,
           });
           return updatedCategories;
         });
-
+  
+        // Reset form fields
         setNewDataType("");
         setSelectedCategory("");
         setNewCategory("");
-
         setMeasurement("");
         setCustomCategory(false);
+  
+        // Close modal
         setModalVisible(false);
       } else {
+        console.error("Failed to add data type:", responseData);
         Alert.alert("Error", "Failed to add data type.");
       }
     } catch (error) {
       console.error("Error adding data type:", error);
+      Alert.alert("Error", "Something went wrong.");
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -206,7 +216,7 @@ export default function HomePage() {
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-          <Text style={styles.label}>Data Type</Text>
+            <Text style={styles.label}>Data Type</Text>
 
             <TextInput
               placeholder="Data Type Name"
@@ -218,17 +228,18 @@ export default function HomePage() {
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Category</Text>
               <Picker
+                              style={styles.picker}
+ 
                 selectedValue={selectedCategory}
                 onValueChange={(itemValue) => {
                   if (itemValue === "Other") {
                     setCustomCategory(true);
-                    setSelectedCategory("");
+                    setSelectedCategory(""); // Ensure selectedCategory is empty
                   } else {
                     setCustomCategory(false);
                     setSelectedCategory(itemValue);
                   }
                 }}
-                style={styles.picker}
               >
                 <Picker.Item label="Select a Category" value="" />
                 {Object.keys(categories).map((category, index) => (
@@ -284,19 +295,19 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 15,
   },
-  
+
   label: {
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 5,
   },
-  
+
   picker: {
     backgroundColor: "white",
     borderRadius: 5,
     paddingHorizontal: 10,
   },
-  
+
   input: {
     backgroundColor: "white",
     borderRadius: 5,
@@ -304,7 +315,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderWidth: 1,
     borderColor: "#ccc",
-  },  
+  },
   scrollContainer: {
     padding: 20,
   },
