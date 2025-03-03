@@ -113,13 +113,13 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-between',
     width: '100%',
-    paddingBottom: 20, // Add some space at the bottom
+    paddingBottom: 20,
   },
   outerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 20, // Add some space between rows
+    marginBottom: 20,
   },
   innerContainer: {
     flex: 1,
