@@ -3,12 +3,9 @@ import { View, Text, TextInput, StyleSheet, ScrollView, Switch, TouchableOpacity
 import { Card } from "react-native-paper";
 import { MaterialCommunityIcons } from "react-native-vector-icons";
 import { useAuth } from "../AuthContext";
-import { AlertContext } from "../AlertContext";
 
 export default function ProfileScreen() {
   const { walletInfo, logout } = useAuth();
-  const { heartAlertsEnabled, setHeartAlertsEnabled } = useContext(AlertContext);
-  const { bpAlertsEnabled, setBPAlertsEnabled } = useContext(AlertContext);
 
   // Editable user information state
   const [userInfo, setUserInfo] = useState({

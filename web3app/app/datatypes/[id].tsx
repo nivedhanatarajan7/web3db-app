@@ -5,9 +5,11 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Card, Text, Button, IconButton } from "react-native-paper";
 import { useLocalSearchParams } from "expo-router";
 import { LineChart } from "react-native-gifted-charts";
+import { useAuth } from "../AuthContext";
 
 export default function DataScreen() {
   const params = useLocalSearchParams();
+  const { walletInfo, logout } = useAuth();
 
   const id = params.id as string;
   const measurementUnit = params.measurementUnit as string;
@@ -26,16 +28,19 @@ export default function DataScreen() {
   }, [id, timeframe, selectedDate]);
 
   const fetchData = async () => {
+
+    const walletString = `${walletInfo.address}/${id}`;
+
     try {
       const requestBody = {
         time: timeframe,
-        topic: id,
+        topic: walletString,
       };
 
       console.log("Sending API request with:", requestBody);
 
       const response = await axios.post(
-        "http://129.74.152.201:5100/get-medical",
+        "http://75.131.29.55:5100/get-medical",
         requestBody
       );
       console.log("API Response:", response.data);
@@ -144,7 +149,7 @@ export default function DataScreen() {
             setSelectedDate(new Date(selectedDate.getTime() - 86400000))
           }
         />
-        <Button mode="contained" buttonColor="#007AFF" onPress={() => setShowDatePicker(true)}>
+        <Button mode="contained" buttonColor="#2196F3" onPress={() => setShowDatePicker(true)}>
           {selectedDate.toDateString()}
         </Button>
         <IconButton
@@ -307,7 +312,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     textAlign: "center",
-    backgroundColor: "#007AFF",
+    backgroundColor: "#2196F3",
     padding: 15,
     marginHorizontal: 10,
     borderRadius: 12,

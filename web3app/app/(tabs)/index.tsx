@@ -20,9 +20,11 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Picker } from "@react-native-picker/picker";
+import { useAuth } from "../AuthContext";
 
 export default function HomePage() {
   const router = useRouter();
+  const { walletInfo, logout } = useAuth();
 
   const [categories, setCategories] = useState<{
     [key: string]: { value: string; measurement: string }[];
@@ -36,12 +38,17 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
 
   const fetchDataTypes = async () => {
+    ("");
     try {
+      const walletString = `${walletInfo.address}/data_type`;
       setLoading(true);
-      const response = await axios.post("http://75.131.29.55:5100/get-medical", {
-        time: "2 days",
-        topic: "data_type",
-      });
+      const response = await axios.post(
+        "http://75.131.29.55:5100/get-medical",
+        {
+          time: "2 days",
+          topic: walletString,
+        }
+      );
 
       const responseData = response.data?.data;
 
@@ -53,7 +60,9 @@ export default function HomePage() {
         return;
       }
 
-      const groupedData: { [key: string]: { value: string; measurement: string }[] } = {};
+      const groupedData: {
+        [key: string]: { value: string; measurement: string }[];
+      } = {};
 
       responseData.forEach((item) => {
         if (!groupedData[item.category]) groupedData[item.category] = [];
@@ -80,15 +89,17 @@ export default function HomePage() {
   }, []);
 
   const addDataType = async () => {
-    if (!newDataType.trim() || !(customCategory ? newCategory.trim() : selectedCategory.trim()) || !measurement.trim()) {
-      return Alert.alert("Error", "Please fill in all fields!");
-    }
-
     const categoryToUse = customCategory ? newCategory : selectedCategory;
+    const walletString = `${walletInfo.address}/data_type`;
     const newEntry = {
-      topic: "data_type",
-      payload: { value: newDataType, category: categoryToUse, measurement },
+      topic: walletString,
+      payload: {
+        value: newDataType,
+        category: categoryToUse,
+        measurement: measurement,
+      },
     };
+    console.log(`${walletInfo.address}/data_type`);
 
     try {
       setLoading(true);
@@ -98,14 +109,22 @@ export default function HomePage() {
         body: JSON.stringify(newEntry),
       });
 
+      const responseData = await response.json(); // Read response
+
+
       if (response.ok) {
         Alert.alert("Success", "New data type added!");
+
+
         setCategories((prevCategories) => {
           const updatedCategories = { ...prevCategories };
           if (!updatedCategories[categoryToUse]) {
             updatedCategories[categoryToUse] = [];
           }
-          updatedCategories[categoryToUse].push({ value: newDataType, measurement });
+          updatedCategories[categoryToUse].push({
+            value: newDataType,
+            measurement,
+          });
           return updatedCategories;
         });
 
@@ -120,7 +139,6 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error("Error adding data type:", error);
-      Alert.alert("Error", "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -131,57 +149,92 @@ export default function HomePage() {
       <Card style={styles.welcomeCard}>
         <Card.Content style={styles.welcomeCardContent}>
           <Text style={styles.welcomeText}>Hello, User!</Text>
-          <MaterialCommunityIcons name="account-circle" size={40} color="black" />
+          <MaterialCommunityIcons
+            name="account-circle"
+            size={40}
+            color="black"
+          />
         </Card.Content>
       </Card>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-  <View style={styles.categoryRow}>
-    {Object.keys(categories).map((category, index) => (
-      <Surface key={index} style={styles.cluster}>
-        <Title style={styles.clusterTitle}>{category}</Title>
-        {categories[category].map((data, idx) => (
-          <Card
-            key={idx}
-            style={styles.card}
-            onPress={() => router.push(
-              `/datatypes/${encodeURIComponent(data.value)}?measurementUnit=${encodeURIComponent(data.measurement)}`
-            )}
-          >
-            <Card.Content style={styles.row}>
-              <MaterialCommunityIcons name="chart-bar" size={30} color="white" />
-              <View style={styles.cardTextContainer}>
-                <Subheading style={styles.cardText}>{data.value}</Subheading>
-                <Text style={styles.label}>Measurement: {data.measurement}</Text>
-              </View>
-            </Card.Content>
-          </Card>
-        ))}
-      </Surface>
-    ))}
-  </View>
-</ScrollView>
+        <View style={styles.categoryRow}>
+          {Object.keys(categories).map((category, index) => (
+            <Surface key={index} style={styles.cluster}>
+              <Title style={styles.clusterTitle}>{category}</Title>
+              {categories[category].map((data, idx) => (
+                <Card
+                  key={idx}
+                  style={styles.card}
+                  onPress={() =>
+                    router.push(
+                      `/datatypes/${encodeURIComponent(
+                        data.value
+                      )}?measurementUnit=${encodeURIComponent(
+                        data.measurement
+                      )}`
+                    )
+                  }
+                >
+                  <Card.Content style={styles.row}>
+                    <MaterialCommunityIcons
+                      name="chart-bar"
+                      size={30}
+                      color="white"
+                    />
+                    <View style={styles.cardTextContainer}>
+                      <Subheading style={styles.cardText}>
+                        {data.value}
+                      </Subheading>
+                      <Text style={styles.label}>
+                        Measurement: {data.measurement}
+                      </Text>
+                    </View>
+                  </Card.Content>
+                </Card>
+              ))}
+            </Surface>
+          ))}
+        </View>
+      </ScrollView>
 
-
-      <FAB style={styles.fab} icon="plus" color="white" onPress={() => setModalVisible(true)} />
+      <FAB
+        style={styles.fab}
+        icon="plus"
+        color="white"
+        onPress={() => setModalVisible(true)}
+      />
 
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.formlabel}>Data Type</Text>
-            <TextInput placeholder="Data Type Name" style={styles.input} value={newDataType} onChangeText={setNewDataType} />
+            <TextInput
+              placeholder="Data Type Name"
+              style={styles.input}
+              value={newDataType}
+              onChangeText={setNewDataType}
+            />
 
             <Text style={styles.formlabel}>Category</Text>
-            <Picker style={styles.pickerContainer} selectedValue={selectedCategory} onValueChange={(itemValue) => {
-              if (itemValue === "Other") {
-                setCustomCategory(true);
-                setSelectedCategory("");
-              } else {
-                setCustomCategory(false);
-                setSelectedCategory(itemValue);
-              }
-            }}>
-              <Picker.Item style={styles.picker}  label="Select a Category" value="" />
+            <Picker
+              style={styles.pickerContainer}
+              selectedValue={selectedCategory}
+              onValueChange={(itemValue) => {
+                if (itemValue === "Other") {
+                  setCustomCategory(true);
+                  setSelectedCategory("");
+                } else {
+                  setCustomCategory(false);
+                  setSelectedCategory(itemValue);
+                }
+              }}
+            >
+              <Picker.Item
+                style={styles.picker}
+                label="Select a Category"
+                value=""
+              />
               {Object.keys(categories).map((category, index) => (
                 <Picker.Item key={index} label={category} value={category} />
               ))}
@@ -189,15 +242,34 @@ export default function HomePage() {
             </Picker>
 
             {customCategory && (
-              <TextInput style={styles.input} placeholder="Enter new category" value={newCategory} onChangeText={setNewCategory} />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter new category"
+                value={newCategory}
+                onChangeText={setNewCategory}
+              />
             )}
 
             <Text style={styles.formlabel}>Measurement Units</Text>
-            <TextInput placeholder="Measurement Unit (e.g., bpm)" style={styles.input} value={measurement} onChangeText={setMeasurement} />
+            <TextInput
+              placeholder="Measurement Unit (e.g., bpm)"
+              style={styles.input}
+              value={measurement}
+              onChangeText={setMeasurement}
+            />
 
             <View style={styles.buttonRow}>
-              <Button title="Cancel" onPress={() => setModalVisible(false)} color="gray" />
-              <Button title={loading ? "Adding..." : "Add"} onPress={addDataType} color="#2196F3" disabled={loading} />
+              <Button
+                title="Cancel"
+                onPress={() => setModalVisible(false)}
+                color="gray"
+              />
+              <Button
+                title={loading ? "Adding..." : "Add"}
+                onPress={addDataType}
+                color="#2196F3"
+                disabled={loading}
+              />
             </View>
           </View>
         </View>
@@ -206,33 +278,33 @@ export default function HomePage() {
   );
 }
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f0f0f0" // Light gray background for clean look
+  container: {
+    flex: 1,
+    backgroundColor: "#f0f0f0", // Light gray background for clean look
   },
 
-  scrollContainer: { 
-    padding: 20 
+  scrollContainer: {
+    padding: 20,
   },
 
-  welcomeCard: { 
-    alignSelf: "center", 
-    marginVertical: 20, 
-    padding: 15, 
-    borderRadius: 10, 
-    backgroundColor: "white", 
-    elevation: 3 
+  welcomeCard: {
+    alignSelf: "center",
+    marginVertical: 20,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: "white",
+    elevation: 3,
   },
 
-  welcomeCardContent: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    justifyContent: "space-between" 
+  welcomeCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 
-  welcomeText: { 
-    fontSize: 18, 
-    fontWeight: "bold" 
+  welcomeText: {
+    fontSize: 18,
+    fontWeight: "bold",
   },
 
   categoryRow: {
@@ -242,63 +314,63 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
 
-  cluster: { 
+  cluster: {
     width: "48%", // Make each category take half the width
-    marginBottom: 15, 
-    padding: 30, 
-    backgroundColor: "#ffffff", 
-    borderRadius: 10, 
-    elevation: 3 
+    marginBottom: 15,
+    padding: 30,
+    backgroundColor: "#ffffff",
+    borderRadius: 10,
+    elevation: 3,
   },
 
-  clusterTitle: { 
-    fontSize: 18, 
-    fontWeight: "bold", 
-    marginBottom: 10 
+  clusterTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
   },
 
-  row: { 
-    flexDirection: "row", 
-    alignItems: "center" 
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 
-  card: { 
-    marginBottom: 10, 
+  card: {
+    marginBottom: 10,
     backgroundColor: "#2196F3", // Blue card background
-    borderRadius: 8, 
-    padding: 10, 
-    elevation: 2 
+    borderRadius: 8,
+    padding: 10,
+    elevation: 2,
   },
 
-  cardTextContainer: { 
-    marginLeft: 10 
+  cardTextContainer: {
+    marginLeft: 10,
   },
 
-  cardText: { 
-    fontSize: 16, 
-    color: "white" // Ensures text inside cards is white
+  cardText: {
+    fontSize: 16,
+    color: "white", // Ensures text inside cards is white
   },
 
-  label: { 
-    fontSize: 14, 
-    color: "white" // Ensures label text is white
+  label: {
+    fontSize: 14,
+    color: "white", // Ensures label text is white
   },
 
-  formlabel: { 
-    fontSize: 14, 
+  formlabel: {
+    fontSize: 14,
     marginVertical: 15,
   },
 
-  fab: { 
-    position: "absolute", 
-    right: 20, 
-    bottom: 20, 
-    backgroundColor: "#2196F3", 
-    borderRadius: 50, 
-    width: 56, 
-    height: 56, 
-    justifyContent: "center", 
-    alignItems: "center" 
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+    backgroundColor: "#2196F3",
+    borderRadius: 50,
+    width: 56,
+    height: 56,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   pickerContainer: {
@@ -316,7 +388,7 @@ const styles = StyleSheet.create({
   picker: {
     fontSize: 16,
     color: "#333",
-  },  
+  },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -343,8 +415,6 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 15, 
-
+    marginTop: 15,
   },
-
 });
