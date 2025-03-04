@@ -321,7 +321,9 @@ const styles = StyleSheet.create({
     fontSize: 22, 
     fontWeight: "bold", 
     color: "#ffffff", 
-    marginVertical: 8 
+    marginVertical: 8, 
+    textAlign: "center",
+
   },
 
   valuetitle: {
