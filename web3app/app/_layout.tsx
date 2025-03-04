@@ -12,11 +12,17 @@ import { useFonts, Roboto_400Regular } from "@expo-google-fonts/roboto";
 SplashScreen.preventAutoHideAsync();
 
 function AppNavigation() {
-  const { walletInfo } = useAuth(); 
+  const { walletInfo } = useAuth();
+
+  if (walletInfo.connected === undefined) {
+    // While checking AsyncStorage, return nothing to avoid flashing login screen
+    return null;
+  }
 
   if (!walletInfo.connected) {
-    return <LoginScreen />; 
+    return <LoginScreen />;
   }
+  
 
   return (
     <Stack>
@@ -49,6 +55,7 @@ export default function RootLayout() {
     return null;
   }
 
+  
   return (
     <AuthProvider>
       <AlertProvider>
