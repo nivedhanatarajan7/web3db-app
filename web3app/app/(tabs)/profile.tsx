@@ -6,7 +6,7 @@ import { useAuth } from "../AuthContext";
 import { AlertContext } from "../AlertContext";
 
 export default function ProfileScreen() {
-  const { walletInfo } = useAuth();
+  const { walletInfo, logout } = useAuth();
   const { heartAlertsEnabled, setHeartAlertsEnabled } = useContext(AlertContext);
   const { bpAlertsEnabled, setBPAlertsEnabled } = useContext(AlertContext);
 
@@ -71,23 +71,11 @@ export default function ProfileScreen() {
         </Card.Content>
       </Card>
 
-      {/* Alert Settings */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.cardHeader}>
-            <MaterialCommunityIcons name="alert" size={30} color="#e74c3c" />
-            <Text style={styles.cardTitle}>Alert Settings</Text>
-          </View>
-          <View style={styles.settingRow}>
-            <Text style={styles.settingLabel}>Heart Alerts</Text>
-            <Switch value={heartAlertsEnabled} onValueChange={() => setHeartAlertsEnabled(!heartAlertsEnabled)} />
-          </View>
-          <View style={styles.settingRow}>
-            <Text style={styles.settingLabel}>Blood Pressure Alerts</Text>
-            <Switch value={bpAlertsEnabled} onValueChange={() => setBPAlertsEnabled(!bpAlertsEnabled)} />
-          </View>
-        </Card.Content>
-      </Card>
+      {/* Logout Button */}
+      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+        <Text style={styles.logoutButtonText}>Logout</Text>
+      </TouchableOpacity>
+
     </ScrollView>
   );
 }
@@ -170,5 +158,16 @@ const styles = StyleSheet.create({
     color: "red",
     fontWeight: "bold",
   },
+  logoutButton: {
+    backgroundColor: "#e74c3c",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  logoutButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
-

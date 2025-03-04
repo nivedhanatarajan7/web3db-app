@@ -144,7 +144,7 @@ export default function DataScreen() {
             setSelectedDate(new Date(selectedDate.getTime() - 86400000))
           }
         />
-        <Button mode="outlined" onPress={() => setShowDatePicker(true)}>
+        <Button mode="contained" buttonColor="#007AFF" onPress={() => setShowDatePicker(true)}>
           {selectedDate.toDateString()}
         </Button>
         <IconButton
@@ -154,16 +154,7 @@ export default function DataScreen() {
             setSelectedDate(new Date(selectedDate.getTime() + 86400000))
           }
         />
-      </View>
-
-      {showDatePicker && (
-        <DateTimePicker
-          value={selectedDate}
-          mode="date"
-          display="default"
-          onChange={(event, newDate) => newDate && setSelectedDate(newDate)}
-        />
-      )}
+      </View> 
 
       <Text variant="headlineMedium" style={styles.title}>
         {title} Overview
@@ -202,9 +193,13 @@ export default function DataScreen() {
         </Card>
       </View>
 
+              <br />
+                            <br />
+
       <Text variant="titleLarge" style={styles.title}>
-        {title} Data View
+        {title} Trends
       </Text>
+      <View style={styles.chartContainer}>
 
       <LineChart
         data={mergedValues.map((value, index) => ({
@@ -214,11 +209,10 @@ export default function DataScreen() {
         width={Dimensions.get("window").width * 0.92}
         height={300}
         color="rgba(0, 123, 255, 1)"
-        yAxisTextStyle={{ color: "#4B164C" }}
-        xAxisLabelTextStyle={{ color: "#4B164C", fontSize: 10 }} // Reduce font size if needed
+        yAxisTextStyle={{ color: "#000000" }}
+        xAxisLabelTextStyle={{ color: "#000000", fontSize: 10 }} // Reduce font size if needed
         yAxisOffset={0} // Helps control the scale
-        maxValue={250}
-        startFillColor="rgba(20,105,81,0.3)"
+        startFillColor="rgba(0, 123, 255, 1)"
           endFillColor="rgba(20,85,81,0.01)"
         noOfSections={3}
         areaChart
@@ -257,17 +251,23 @@ export default function DataScreen() {
           },
         }}
       />
-
+</View>
       <View style={styles.row}>
         {["1 hour", "5 hours", "24 hours"].map((item) => (
           <Button
-            key={item}
-            mode={timeframe === item ? "contained" : "outlined"}
-            style={styles.timeButton}
-            onPress={() => setTimeframe(item)}
-          >
-            {item}
-          </Button>
+          mode="contained"
+          style={[
+            styles.timeButton,
+            timeframe === item ? styles.activeButton : styles.inactiveButton,
+          ]}
+          labelStyle={
+            timeframe === item ? styles.activeButtonText : styles.inactiveButtonText
+          }
+          onPress={() => setTimeframe(item)}
+        >
+          {item}
+        </Button>
+        
         ))}
       </View>
     </ScrollView>
@@ -275,39 +275,92 @@ export default function DataScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#FBFBFB", padding: 20 },
-  title: { textAlign: "center", marginBottom: 10, color: "#4B164C" },
+  container: { 
+    backgroundColor: "#f0f0f0", 
+    padding: 20, 
+    flexGrow: 1 
+  },
+
+  title: { 
+    textAlign: "center", 
+    marginBottom: 10, 
+    fontSize: 20, 
+    fontWeight: "bold", 
+    color: "#000000" 
+  },
+
   row: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 15,
   },
+
   date: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 15,
   },
+
   valuecard: {
     flex: 1,
     alignItems: "center",
     textAlign: "center",
-    backgroundColor: "#D9EAFD",
+    backgroundColor: "#007AFF",
     padding: 15,
     marginHorizontal: 10,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3, 
   },
-  valueText: { color: "#4B164C", marginVertical: 8 },
+
+  valueText: { 
+    fontSize: 22, 
+    fontWeight: "bold", 
+    color: "#ffffff", 
+    marginVertical: 8 
+  },
+
   valuetitle: {
-    alignItems: "center",
     textAlign: "center",
-    color: "#4B164C",
-    marginVertical: 8,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ffffff",
+    marginBottom: 5,
   },
+
   timeButton: {
     marginHorizontal: 5,
-    backgroundColor: "#D9EAFD",
-    color: "black",
+    borderRadius: 8,
   },
-  chartContainer: { marginVertical: 10 },
+
+  activeButton: {
+    backgroundColor: "#007AFF",
+  },
+
+  activeButtonText: {
+    color: "white",
+  },
+
+  inactiveButton: {
+    backgroundColor: "#E0E0E0",
+  },
+
+  inactiveButtonText: {
+    color: "#000000",
+  },
+
+  chartContainer: { 
+    marginVertical: 10, 
+    padding: 10, 
+    borderRadius: 10, 
+    backgroundColor: "white", 
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
 });
