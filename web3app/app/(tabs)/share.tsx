@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   deviceText: {
     fontSize: 16,
-    color: "#0056B3",
+    color: "#000000",
   },
 });
 
