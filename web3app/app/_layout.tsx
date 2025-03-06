@@ -22,7 +22,7 @@ function AppNavigation() {
   if (!walletInfo.connected) {
     return <LoginScreen />;
   }
-  
+  1
 
   return (
     <Stack>
