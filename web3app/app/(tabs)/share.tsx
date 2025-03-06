@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     color: "gray",
   },
   deviceCard: {
-    backgroundColor: "#E3F2FD",
+    backgroundColor: "#e0e0e0e0",
     padding: 15,
     borderRadius: 8,
     marginVertical: 5,
