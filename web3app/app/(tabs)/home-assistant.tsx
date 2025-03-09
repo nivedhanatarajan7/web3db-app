@@ -1,20 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
-
-type CardProps = {
-  mainText: string;
-  subText: string;
-  onPress: (mainText: string, subText: string) => void;
-};
-
-const Card: React.FC<CardProps> = ({ mainText, subText, onPress }) => {
-  return (
-    <TouchableOpacity onPress={() => onPress(mainText, subText)} style={styles.card}>
-      <Text style={styles.mainText}>{mainText}</Text>
-      <Text style={styles.subText}>{subText}</Text>
-    </TouchableOpacity>
-  );
-};
+import MaterialCard from '../../components/MaterialCard'; // Adjust the path as necessary
 
 const InnerContainer: React.FC<{ title: string; onCardPress: (mainText: string, subText: string) => void }> = ({ title, onCardPress }) => {
   const cards = [
@@ -32,12 +18,12 @@ const InnerContainer: React.FC<{ title: string; onCardPress: (mainText: string, 
       <View style={styles.leftRightContainer}>
         <View style={styles.columnContainer}>
           {cards.slice(0, 3).map((card, index) => (
-            <Card key={index} mainText={card.mainText} subText={card.subText} onPress={onCardPress} />
+            <MaterialCard key={index} mainText={card.mainText} subText={card.subText} onPress={onCardPress} />
           ))}
         </View>
         <View style={styles.columnContainer}>
           {cards.slice(3).map((card, index) => (
-            <Card key={index} mainText={card.mainText} subText={card.subText} onPress={onCardPress} />
+            <MaterialCard key={index} mainText={card.mainText} subText={card.subText} onPress={onCardPress} />
           ))}
         </View>
       </View>
@@ -142,25 +128,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-between',
     marginHorizontal: 5,
-  },
-  card: {
-    width: '100%',
-    padding: 15,
-    marginVertical: 5,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  mainText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  subText: {
-    fontSize: 12,
-    color: 'gray',
   },
   modalContainer: {
     flex: 1,
