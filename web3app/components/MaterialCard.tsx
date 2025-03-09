@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Paragraph, Text } from 'react-native-paper';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Card, Text } from 'react-native-paper';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 
 type MaterialCardProps = {
   mainText: string;
@@ -21,9 +21,13 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ mainText, subText, onPress 
         activeOpacity={1}
       >
         <Card style={[styles.card, isHovered && styles.cardHovered]}>
-          <Card.Content>
-            <Text style={styles.title}>{mainText}</Text>
-            <Paragraph>{subText}</Paragraph>
+          <Card.Content style={styles.cardContent}>
+            <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+              {mainText}
+            </Text>
+            <Text style={styles.paragraph} numberOfLines={1} ellipsizeMode="tail">
+              {subText}
+            </Text>
           </Card.Content>
         </Card>
       </TouchableOpacity>
@@ -37,13 +41,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     elevation: 5,
     backgroundColor: '#fff',
+    height: 'auto',
   },
   cardHovered: {
     backgroundColor: '#f5f5f5',
   },
+  cardContent: {
+    flexDirection: 'column',
+    flex: 1,
+    justifyContent: 'center',
+  },
   title: {
-    fontSize: 18,
+    fontSize: 14, // Adjust font size to fit the smaller card
     fontWeight: 'bold',
+  },
+  paragraph: {
+    fontSize: 12, // Adjust font size to fit the smaller card
+    color: 'gray',
   },
 });
 

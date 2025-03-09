@@ -14,7 +14,7 @@ const InnerContainer: React.FC<{ title: string; onCardPress: (mainText: string, 
 
   return (
     <View style={styles.innerContainer}>
-      <Text style={styles.innerContainerTitle}>{title}</Text>
+      <Text style={styles.innerContainerTitle} numberOfLines={1} ellipsizeMode="tail">{title}</Text>
       <View style={styles.leftRightContainer}>
         <View style={styles.columnContainer}>
           {cards.slice(0, 3).map((card, index) => (
@@ -49,17 +49,13 @@ export default function HomeAssistant() {
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <Text style={styles.header}>Welcome to Home Assistant</Text>
-        <View style={styles.rowsContainer}>
-          <View style={styles.outerContainer}>
-            <InnerContainer title='Container 1' onCardPress={handleCardPress} />
-            <InnerContainer title='Container 2' onCardPress={handleCardPress} />
-            <InnerContainer title='Container 3' onCardPress={handleCardPress} />
-          </View>
-          <View style={styles.outerContainer}>
-            <InnerContainer title='Container 4' onCardPress={handleCardPress} />
-            <InnerContainer title='Container 5' onCardPress={handleCardPress} />
-            <InnerContainer title='Container 6' onCardPress={handleCardPress} />
-          </View>
+        <View style={styles.outerContainer}>
+          <InnerContainer title='Container 1' onCardPress={handleCardPress} />
+          <InnerContainer title='Container 2' onCardPress={handleCardPress} />
+          <InnerContainer title='Container 3' onCardPress={handleCardPress} />
+          <InnerContainer title='Container 4' onCardPress={handleCardPress} />
+          <InnerContainer title='Container 5' onCardPress={handleCardPress} />
+          <InnerContainer title='Container 6' onCardPress={handleCardPress} />
         </View>
         {selectedCard && (
           <Modal
@@ -110,12 +106,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     marginBottom: 20,
+    flexWrap: 'wrap', // Allow containers to wrap to the next line
   },
   innerContainer: {
-    flex: 1,
+    flexBasis: '30%', // Ensure three items per row
     flexDirection: 'column',
-    justifyContent: 'space-between',
-    marginHorizontal: 10,
+    marginHorizontal: 5,
+    paddingBottom: 20,
+    height: 'auto',
   },
   innerContainerTitle: {
     fontSize: 16,
