@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import MaterialCard from '../../components/MaterialCard'; // Adjust the path as necessary
 
 const InnerContainer: React.FC<{ title: string; onCardPress: (mainText: string, subText: string) => void }> = ({ title, onCardPress }) => {
@@ -46,43 +46,48 @@ export default function HomeAssistant() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Welcome to Home Assistant</Text>
-      <View style={styles.rowsContainer}>
-        <View style={styles.outerContainer}>
-          <InnerContainer title='Container 1' onCardPress={handleCardPress} />
-          <InnerContainer title='Container 2' onCardPress={handleCardPress} />
-          <InnerContainer title='Container 3' onCardPress={handleCardPress} />
-        </View>
-        <View style={styles.outerContainer}>
-          <InnerContainer title='Container 4' onCardPress={handleCardPress} />
-          <InnerContainer title='Container 5' onCardPress={handleCardPress} />
-          <InnerContainer title='Container 6' onCardPress={handleCardPress} />
-        </View>
-      </View>
-      {selectedCard && (
-        <Modal
-          animationType="none"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={handleCloseModal}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <TouchableOpacity onPress={handleCloseModal} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>X</Text>
-              </TouchableOpacity>
-              <Text style={styles.modalMainText}>{selectedCard.mainText}</Text>
-              <Text style={styles.modalSubText}>{selectedCard.subText}</Text>
-            </View>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        <Text style={styles.header}>Welcome to Home Assistant</Text>
+        <View style={styles.rowsContainer}>
+          <View style={styles.outerContainer}>
+            <InnerContainer title='Container 1' onCardPress={handleCardPress} />
+            <InnerContainer title='Container 2' onCardPress={handleCardPress} />
+            <InnerContainer title='Container 3' onCardPress={handleCardPress} />
           </View>
-        </Modal>
-      )}
-    </View>
+          <View style={styles.outerContainer}>
+            <InnerContainer title='Container 4' onCardPress={handleCardPress} />
+            <InnerContainer title='Container 5' onCardPress={handleCardPress} />
+            <InnerContainer title='Container 6' onCardPress={handleCardPress} />
+          </View>
+        </View>
+        {selectedCard && (
+          <Modal
+            animationType="none"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={handleCloseModal}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <TouchableOpacity onPress={handleCloseModal} style={styles.closeButton}>
+                  <Text style={styles.closeButtonText}>X</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalMainText}>{selectedCard.mainText}</Text>
+                <Text style={styles.modalSubText}>{selectedCard.subText}</Text>
+              </View>
+            </View>
+          </Modal>
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -97,7 +102,6 @@ const styles = StyleSheet.create({
   rowsContainer: {
     flex: 1,
     flexDirection: 'column',
-    justifyContent: 'space-between',
     width: '100%',
     paddingBottom: 20,
   },
