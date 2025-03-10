@@ -1,35 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
-import MaterialCard from '../../components/MaterialCard'; // Adjust the path as necessary
-
-const InnerContainer: React.FC<{ title: string; onCardPress: (mainText: string, subText: string) => void }> = ({ title, onCardPress }) => {
-  const cards = [
-    { mainText: "Main Text 1", subText: "Subtext 1" },
-    { mainText: "Main Text 2", subText: "Subtext 2" },
-    { mainText: "Main Text 3", subText: "Subtext 3" },
-    { mainText: "Main Text 4", subText: "Subtext 4" },
-    { mainText: "Main Text 5", subText: "Subtext 5" },
-    { mainText: "Main Text 6", subText: "Subtext 6" },
-  ];
-
-  return (
-    <View style={styles.innerContainer}>
-      <Text style={styles.innerContainerTitle} numberOfLines={1} ellipsizeMode="tail">{title}</Text>
-      <View style={styles.leftRightContainer}>
-        <View style={styles.columnContainer}>
-          {cards.slice(0, 3).map((card, index) => (
-            <MaterialCard key={index} mainText={card.mainText} subText={card.subText} onPress={onCardPress} />
-          ))}
-        </View>
-        <View style={styles.columnContainer}>
-          {cards.slice(3).map((card, index) => (
-            <MaterialCard key={index} mainText={card.mainText} subText={card.subText} onPress={onCardPress} />
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-};
+import CardContainer from '../../components/CardContainer'; // Adjust the path as necessary
 
 export default function HomeAssistant() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -45,17 +16,23 @@ export default function HomeAssistant() {
     setSelectedCard(null);
   };
 
+  const cardContainers = [
+    { title: 'Container 1' },
+    { title: 'Container 2' },
+    { title: 'Container 3' },
+    { title: 'Container 4' },
+    { title: 'Container 5' },
+    { title: 'Container 6' },
+  ];
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <Text style={styles.header}>Welcome to Home Assistant</Text>
         <View style={styles.outerContainer}>
-          <InnerContainer title='Container 1' onCardPress={handleCardPress} />
-          <InnerContainer title='Container 2' onCardPress={handleCardPress} />
-          <InnerContainer title='Container 3' onCardPress={handleCardPress} />
-          <InnerContainer title='Container 4' onCardPress={handleCardPress} />
-          <InnerContainer title='Container 5' onCardPress={handleCardPress} />
-          <InnerContainer title='Container 6' onCardPress={handleCardPress} />
+          {cardContainers.map((container, index) => (
+            <CardContainer key={index} title={container.title} onCardPress={handleCardPress} />
+          ))}
         </View>
         {selectedCard && (
           <Modal
@@ -104,33 +81,10 @@ const styles = StyleSheet.create({
   outerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center', // Center items vertically
     width: '100%',
     marginBottom: 20,
     flexWrap: 'wrap', // Allow containers to wrap to the next line
-  },
-  innerContainer: {
-    flexBasis: '30%', // Ensure three items per row
-    flexDirection: 'column',
-    marginHorizontal: 10,
-    paddingBottom: 20,
-    height: 'auto',
-    /* marginInline: 'auto', */
-  },
-  innerContainerTitle: {
-    fontSize: 16,
-    paddingLeft: 15,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  leftRightContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  columnContainer: {
-    flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    marginHorizontal: 5,
   },
   modalContainer: {
     flex: 1,
