@@ -13,6 +13,15 @@ type MaterialCardProps = {
 const MaterialCard: React.FC<MaterialCardProps> = ({ mainText, subText, onPress }) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  // Replace empty strings with a space to maintain card size
+  const displayMainText = mainText === "" ? " " : mainText;
+  const displaySubText = subText === "" ? " " : subText;
+
+  // If both mainText and subText are empty, do not render the card
+  if (mainText === "" && subText === "") {
+    return null;
+  }
+
   return (
     <div
       onMouseEnter={() => setIsHovered(true)}

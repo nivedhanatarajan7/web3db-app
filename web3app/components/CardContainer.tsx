@@ -8,14 +8,18 @@ type CardContainerProps = {
 };
 
 const CardContainer: React.FC<CardContainerProps> = ({ title, onCardPress }) => {
-  const cards = [
+  let cards = [
     { mainText: "Main Text 1", subText: "Subtext 1" },
     { mainText: "Main Text 2", subText: "Subtext 2" },
     { mainText: "Main Text 3", subText: "Subtext 3" },
     { mainText: "Main Text 4", subText: "Subtext 4" },
     { mainText: "Main Text 5", subText: "Subtext 5" },
-    { mainText: "Main Text 6", subText: "Subtext 6" },
   ];
+
+  // Add empty cards to ensure there are always 6 cards
+  while (cards.length < 6) {
+    cards.push({ mainText: "", subText: "" });
+  }
 
   return (
     <View style={styles.innerContainer}>
@@ -25,17 +29,12 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, onCardPress }) => 
           <Text style={styles.buttonText}>Edit</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.leftRightContainer}>
-        <View style={styles.columnContainer}>
-          {cards.slice(0, 3).map((card, index) => (
-            <MaterialCard key={index} mainText={card.mainText} subText={card.subText} onPress={onCardPress} />
-          ))}
-        </View>
-        <View style={styles.columnContainer}>
-          {cards.slice(3).map((card, index) => (
-            <MaterialCard key={index} mainText={card.mainText} subText={card.subText} onPress={onCardPress} />
-          ))}
-        </View>
+      <View style={styles.cardsContainer}>
+        {cards.map((card, index) => (
+          <View key={index} style={styles.cardWrapper}>
+            <MaterialCard mainText={card.mainText} subText={card.subText} onPress={onCardPress} />
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -71,15 +70,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  leftRightContainer: {
+  cardsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-  columnContainer: {
-    flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    marginHorizontal: 5,
+  cardWrapper: {
+    width: '48%', // Adjust the width to fit two cards per row with some spacing
+    marginBottom: 0,
   },
 });
 
