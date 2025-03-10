@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   },
   outerContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     width: '100%',
     marginBottom: 20,
     flexWrap: 'wrap', // Allow containers to wrap to the next line
@@ -111,9 +111,10 @@ const styles = StyleSheet.create({
   innerContainer: {
     flexBasis: '30%', // Ensure three items per row
     flexDirection: 'column',
-    marginHorizontal: 5,
+    marginHorizontal: 10,
     paddingBottom: 20,
     height: 'auto',
+    /* marginInline: 'auto', */
   },
   innerContainerTitle: {
     fontSize: 16,
