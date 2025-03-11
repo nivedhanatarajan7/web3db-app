@@ -1,26 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, Text, IconButton } from 'react-native-paper';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Animated } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 type MaterialCardProps = {
-  mainText: string;
-  subText: string;
+  mainText?: string;
+  subText?: string;
+  icon?: string;
+  color?: string;
   onPress: (mainText: string, subText: string) => void;
+  isEditing: boolean;
+  isActive?: boolean;
 };
 
-const MaterialCard: React.FC<MaterialCardProps> = ({ mainText, subText, onPress }) => {
+const MaterialCard: React.FC<MaterialCardProps> = ({ mainText = "Create New Card", subText = "Data", icon = 'heart', color = 'red', onPress, isEditing, isActive = 'true' }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const scaleValue = useRef(new Animated.Value(1)).current;
 
-  // Replace empty strings with a space to maintain card size
-  const displayMainText = mainText === "" ? " " : mainText;
-  const displaySubText = subText === "" ? " " : subText;
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    Animated.spring(scaleValue, {
+      toValue: 1.05,
+      useNativeDriver: true,
+    }).start();
+  };
 
-  // If both mainText and subText are empty, do not render the card
-  if (mainText === "" && subText === "") {
-    return null;
-  }
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    Animated.spring(scaleValue, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const displayMainText = mainText === "" ? "default" : mainText;
+  const displaySubText = subText === "" ? "default" : subText;
+
+  const displayIcon = !isActive ? 'plus' : (isEditing ? 'delete' : icon);
 
   return (
     <div
@@ -32,9 +49,15 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ mainText, subText, onPress 
         onPress={() => onPress(mainText, subText)}
         activeOpacity={1}
       >
-        <Card style={[styles.card, isHovered && styles.cardHovered]}>
+        <Card style={[
+          styles.card, 
+          !isActive && styles.inactive,
+          isHovered && styles.cardHovered, 
+          isActive && isEditing && styles.activeCardEditing,
+          !isActive && isEditing && styles.visibleWhenEditing,
+        ]}>
           <Card.Content style={styles.cardContent}>
-            <MaterialCommunityIcons name="heart" size={20} color="red" style={styles.icon} />
+            <MaterialCommunityIcons name={displayIcon} size={20} color={isEditing ? 'gray' : color } style={styles.icon} />
             <View style={styles.textContainer}>
               <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
                 {mainText}
@@ -58,12 +81,34 @@ const styles = StyleSheet.create({
   card: {
     marginVertical: 5,
     borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
     elevation: 5,
     backgroundColor: '#fff',
     height: 'auto', // Allow height to be determined by content
   },
   cardHovered: {
     backgroundColor: '#f5f5f5',
+    transform: 'scale(1.05)',
+  },
+  activeCardEditing: {
+    // e60000
+    // #ff9999
+    borderColor: '#ff9999', // Red border when editing
+    shadowColor: '#ff9999', // Red shadow color when editing
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 3,
+    elevation: 5, // Ensure elevation is applied for Android
+  },
+  inactive: {
+    opacity: 0,
+    pointerEvents: 'none',
+  },
+  visibleWhenEditing: {
+    opacity: .8,
+    pointerEvents: 'auto',
+    display: 'flex',
   },
   cardContent: {
     flexDirection: 'row',
