@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
 import MaterialCard from './MaterialCard'; // Adjust the path as necessary
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -16,6 +16,10 @@ type CardContainerProps = {
 
 const CardContainer: React.FC<CardContainerProps> = ({ title, onCardPress }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newMainText, setNewMainText] = useState('');
+  const [newSubText, setNewSubText] = useState('');
+  
   const [cards, setCards] = useState<Card[]>([
     { mainText: "Main Text 1", subText: "Subtext 1", isActive: true },
     { mainText: "Main Text 2", subText: "Subtext 2", isActive: true },
@@ -36,8 +40,24 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, onCardPress }) => 
 
   const onEditCardPress = (index: number) => {
     const updatedCards = cards.filter((_, i) => i !== index);
-/*     updatedCards.push({ mainText: "", subText: "", isActive: false });
- */    setCards(updatedCards);
+    setCards(updatedCards);
+  };
+
+  const onEditAddCardPress = () => {
+    setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setNewMainText('');
+    setNewSubText('');
+  };
+
+  const handleAddCard = () => {
+    const updatedCards = [...cards];
+    updatedCards.push({ mainText: newMainText, subText: newSubText, isActive: true });
+    setCards(updatedCards);
+    handleCloseModal();
   };
 
   return (
@@ -54,13 +74,47 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, onCardPress }) => 
             <MaterialCard
               mainText={card.mainText}
               subText={card.subText}
-              onPress={isEditing ? () => onEditCardPress(index) : onCardPress}
+              onPress={
+                isEditing
+                  ? card.isActive
+                    ? () => onEditCardPress(index)
+                    : onEditAddCardPress
+                  : () => onCardPress(card.mainText, card.subText)
+              }
               isEditing={isEditing}
               isActive={card.isActive}
             />
           </View>
         ))}
       </View>
+      <Modal
+        animationType="none"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={handleCloseModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity onPress={handleCloseModal} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>X</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Add New Card</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Main Text"
+              value={newMainText}
+              onChangeText={setNewMainText}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Sub Text"
+              value={newSubText}
+              onChangeText={setNewSubText}
+            />
+            <Button title="Add Card" onPress={handleAddCard} />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -103,6 +157,39 @@ const styles = StyleSheet.create({
   cardWrapper: {
     width: '48%', // Adjust the width to fit two cards per row with some spacing
     marginBottom: 0,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  closeButton: {
+    alignSelf: 'flex-end',
+  },
+  closeButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  input: {
+    width: '100%',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    marginBottom: 10,
   },
 });
 
