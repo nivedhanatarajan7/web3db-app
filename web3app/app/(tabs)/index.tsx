@@ -40,13 +40,11 @@ export default function HomePage() {
   const fetchDataTypes = async () => {
     ("");
     try {
-      const walletString = `${walletInfo.address}/data_type`;
       setLoading(true);
       const response = await axios.post(
-        "http://75.131.29.55:5100/get-medical",
+        "http://75.131.29.55:5100/get-registered-devices",
         {
-          time: "2 days",
-          topic: walletString,
+          wallet_id: walletInfo.address,
         }
       );
 
@@ -90,20 +88,15 @@ export default function HomePage() {
 
   const addDataType = async () => {
     const categoryToUse = customCategory ? newCategory : selectedCategory;
-    const walletString = `${walletInfo.address}/data_type`;
     const newEntry = {
-      topic: walletString,
-      payload: {
-        value: newDataType,
-        category: categoryToUse,
-        measurement: measurement,
-      },
+      wallet_id: walletInfo.address,
+      device_id: newDataType
     };
     console.log(`${walletInfo.address}/data_type`);
 
     try {
       setLoading(true);
-      const response = await fetch("http://75.131.29.55:5100/add-medical", {
+      const response = await fetch("http://75.131.29.55:5100/add-device", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newEntry),
