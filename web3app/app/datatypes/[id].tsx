@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, StyleSheet, Dimensions } from "react-native";
 import axios from "axios";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { Card, Text, Button, IconButton } from "react-native-paper";
 import { useLocalSearchParams } from "expo-router";
 import { LineChart } from "react-native-gifted-charts";
@@ -20,7 +19,13 @@ export default function DataScreen() {
   const [timeframe, setTimeframe] = useState<string>("5 hours"); // Default to 5 hours
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-
+  const [current, setCurrent] = useState(0);
+  useEffect(() => {
+    if (values.length > 0) {
+      setCurrent(values.at(0) ?? 0); // Default to 0 if undefined
+    }
+  }, [values]);
+  
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 10000);
@@ -28,48 +33,42 @@ export default function DataScreen() {
   }, [id, timeframe, selectedDate]);
 
   const fetchData = async () => {
-
-    const walletString = `${walletInfo.address}/${id}`;
-
     try {
       const requestBody = {
         time: timeframe,
-        topic: walletString,
+        topic: id,
+        date: selectedDate.toISOString().split("T")[0],
+        wallet_id: walletInfo.address
       };
-
+  
       console.log("Sending API request with:", requestBody);
-
+  
       const response = await axios.post(
-        "http://75.131.29.55:5100/get-medical",
+        "http://129.74.152.201:5100/get-medical",
         requestBody
       );
+  
       console.log("API Response:", response.data);
-
+  
       if (!response.data || response.data.message === "No data available") {
         console.warn("No data received for:", timeframe);
-        setValues([]);
-        setTimestamps([]);
-        return;
+        return; // Do not clear existing values
       }
-
+  
       const rawData = response.data.data || [];
       const filteredData = rawData.filter(
         (record) => record.value !== undefined && record.timestamp
       );
-
-      if (filteredData.length === 0) {
-        console.warn("Filtered data is empty.");
-        setValues([]);
-        setTimestamps([]);
-        return;
+  
+      if (filteredData.length > 0) {
+        setValues(filteredData.map((record) => parseFloat(record.value)));
+        setTimestamps(filteredData.map((record) => record.timestamp * 1000));
       }
-
-      setValues(filteredData.map((record) => parseFloat(record.value)));
-      setTimestamps(filteredData.map((record) => record.timestamp * 1000));
     } catch (error) {
       console.error("Error fetching data", error);
     }
   };
+  
 
   const generateFullTimeRange = () => {
     const now = selectedDate.getTime();
@@ -92,24 +91,40 @@ export default function DataScreen() {
 
   const mergedData = () => {
     const completeTimeRange = generateFullTimeRange();
+    
+    if (values.length === 1) {
+      // If only one data point exists, place it in the middle of the time range
+      const middleIndex = Math.floor(completeTimeRange.length / 2);
+      const filledValues = completeTimeRange.map((_, index) =>
+        index === middleIndex ? values[0] : 0 // Only set the value at one index
+      );
+  
+      return {
+        formattedLabels: completeTimeRange.map((time, index) =>
+          index % Math.ceil(completeTimeRange.length / 10) === 0
+            ? new Date(time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            : ""
+        ),
+        mergedValues: filledValues,
+      };
+    }
+  
+    // Normal case when multiple data points exist
     const mergedValues = completeTimeRange.map((time) => {
-      const closestIndex = timestamps.findIndex(
-        (t) => Math.abs(t - time) <= 30 * 60 * 1000
-      ); // 5-minute tolerance
-      return closestIndex !== -1 ? values[closestIndex] : 0; // Fill missing values with 0
+      const closestIndex = timestamps.findIndex((t) => Math.abs(t - time) <= 30 * 60 * 1000);
+      return closestIndex !== -1 ? values[closestIndex] : 0;
     });
-
+  
     const labelInterval = Math.ceil(completeTimeRange.length / 10);
     const formattedLabels = completeTimeRange.map((time, index) =>
       index % labelInterval === 0
-        ? new Date(time).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
+        ? new Date(time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
         : ""
     );
+  
     return { formattedLabels, mergedValues };
   };
+  
 
   const fillMissingData = (timestamps: number[], values: number[]) => {
     if (timestamps.length === 0) return { timestamps: [], values: [] };
@@ -152,6 +167,7 @@ export default function DataScreen() {
         <Button mode="contained" buttonColor="#2196F3" onPress={() => setShowDatePicker(true)}>
           {selectedDate.toDateString()}
         </Button>
+        
         <IconButton
           icon="chevron-right"
           size={24}
@@ -171,7 +187,7 @@ export default function DataScreen() {
             Current {title}
           </Text>
           <Text variant="displaySmall" style={styles.valueText}>
-            {values.length > 0 ? values.at(-1) : "No data"} {measurementUnit}
+            {current} {measurementUnit}
           </Text>
         </Card>
 
