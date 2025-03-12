@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { Linking, Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface WalletInfo {
   address: string | null;
@@ -22,6 +23,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     status: "🔗 Click to connect your wallet.",
   });
 
+  // 🔄 Load wallet info from storage when app starts
+  useEffect(() => {
+    const loadWallet = async () => {
+      const storedWallet = await AsyncStorage.getItem("walletInfo");
+      if (storedWallet) {
+        setWalletInfo(JSON.parse(storedWallet));
+      }
+    };
+    loadWallet();
+  }, []);
+
   const connectWallet = async () => {
     if (Platform.OS === "web") {
       if (typeof window !== "undefined" && (window as any).ethereum) {
@@ -29,11 +41,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const accounts = await (window as any).ethereum.request({
             method: "eth_requestAccounts",
           });
-          setWalletInfo({
+          const newWalletInfo = {
             address: accounts[0],
             connected: true,
             status: "✅ Wallet connected successfully!",
-          });
+          };
+          setWalletInfo(newWalletInfo);
+          await AsyncStorage.setItem("walletInfo", JSON.stringify(newWalletInfo)); // Save login state
         } catch (error: any) {
           setWalletInfo({
             address: null,
@@ -68,12 +82,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     setWalletInfo({
       address: null,
       connected: false,
       status: "🔗 Click to connect your wallet.",
     });
+    await AsyncStorage.removeItem("walletInfo"); // Remove login state
   };
 
   return (
