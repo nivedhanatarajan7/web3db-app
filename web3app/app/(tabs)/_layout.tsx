@@ -13,45 +13,19 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: activeColor,
-        headerShown: false,
-        tabBarStyle: styles.tabBar,
-      }}
-    >
+
       <Tabs.Screen
         name="index"
         options={{
           title: 'Summary',
-          tabBarIcon: ({ focused }) => (
-            <Icon source="home" size={30} color={focused ? activeColor : inactiveColor} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="devices"
-        options={{
-          title: 'Your Devices',
-          tabBarIcon: ({ focused }) => (
-            <Icon source="tablet" size={30} color={focused ? activeColor : inactiveColor} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="share"
-        options={{
-          title: 'Share Data',
-          tabBarIcon: ({ focused }) => (
-            <Icon source="send" size={30} color={focused ? activeColor : inactiveColor} />
-          ),
+
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ focused }) => (
-            <Icon source="account" size={30} color={focused ? activeColor : inactiveColor} />
-          ),
+
         }}
       />
     </Tabs>
