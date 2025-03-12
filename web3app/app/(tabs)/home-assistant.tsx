@@ -1,19 +1,37 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import CardContainer from '../../components/CardContainer'; // Adjust the path as necessary
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function HomeAssistant() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCard, setSelectedCard] = useState<{ mainText: string; subText: string } | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const handleCardPress = (mainText: string, subText: string) => {
     setSelectedCard({ mainText, subText });
     setModalVisible(true);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 10, // Instant duration
+      useNativeDriver: true,
+    }).start();
   };
 
   const handleCloseModal = () => {
-    setModalVisible(false);
-    setSelectedCard(null);
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 10, // Instant duration
+      useNativeDriver: true,
+    }).start(() => {
+      setModalVisible(false);
+      setSelectedCard(null);
+    });
+  };
+
+  const handleEditPress = () => {
+    setIsEditing(!isEditing);
   };
 
   const cardContainers = [
@@ -28,20 +46,24 @@ export default function HomeAssistant() {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        <Text style={styles.header}>Welcome to Home Assistant</Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.header}>Welcome to Home Assistant</Text>
+          <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
+            <MaterialCommunityIcons name={isEditing ? 'check' : 'pencil'} size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
         <View style={styles.outerContainer}>
           {cardContainers.map((container, index) => (
-            <CardContainer key={index} title={container.title} onCardPress={handleCardPress} />
+            <CardContainer key={index} title={container.title} onCardPress={handleCardPress} isEditing={isEditing} />
           ))}
         </View>
         {selectedCard && (
           <Modal
-            animationType="none"
             transparent={true}
             visible={modalVisible}
             onRequestClose={handleCloseModal}
           >
-            <View style={styles.modalContainer}>
+            <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
               <View style={styles.modalContent}>
                 <TouchableOpacity onPress={handleCloseModal} style={styles.closeButton}>
                   <Text style={styles.closeButtonText}>X</Text>
@@ -49,7 +71,7 @@ export default function HomeAssistant() {
                 <Text style={styles.modalMainText}>{selectedCard.mainText}</Text>
                 <Text style={styles.modalSubText}>{selectedCard.subText}</Text>
               </View>
-            </View>
+            </Animated.View>
           </Modal>
         )}
       </View>
@@ -63,20 +85,27 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: "#f5f5f5",
     padding: 20,
   },
-  header: {
-    fontSize: 24,
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
     marginBottom: 20,
   },
-  rowsContainer: {
+  header: {
+    fontSize: 24,
+    textAlign: 'center',
     flex: 1,
-    flexDirection: 'column',
-    width: '100%',
-    paddingBottom: 20,
+  },
+  editButton: {
+    backgroundColor: '#4da6ff',
+    padding: 10,
+    borderRadius: 100,
+    marginRight: 40,
   },
   outerContainer: {
     flexDirection: 'row',
@@ -85,6 +114,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
     flexWrap: 'wrap', // Allow containers to wrap to the next line
+    
   },
   modalContainer: {
     flex: 1,
@@ -93,7 +123,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
+    width: '40%',
     padding: 20,
     backgroundColor: '#fff',
     borderRadius: 8,

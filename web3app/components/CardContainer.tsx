@@ -12,10 +12,10 @@ type Card = {
 type CardContainerProps = {
   title: string;
   onCardPress: (mainText: string, subText: string) => void;
+  isEditing: boolean;
 };
 
-const CardContainer: React.FC<CardContainerProps> = ({ title, onCardPress }) => {
-  const [isEditing, setIsEditing] = useState(false);
+const CardContainer: React.FC<CardContainerProps> = ({ title, onCardPress, isEditing }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newMainText, setNewMainText] = useState('');
   const [newSubText, setNewSubText] = useState('');
@@ -33,11 +33,6 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, onCardPress }) => 
     cards.push({ mainText: "Create New Card", subText: "Insert Data", isActive: false });
   }
 
-  const onEditPress = () => {
-    console.log('Edit button pressed');
-    setIsEditing(!isEditing);
-  };
-
   const onEditCardPress = (index: number) => {
     const updatedCards = cards.filter((_, i) => i !== index);
     setCards(updatedCards);
@@ -54,7 +49,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, onCardPress }) => 
   };
 
   const handleAddCard = () => {
-    const updatedCards = [...cards];
+    const updatedCards = cards.filter(card => card.isActive);
     updatedCards.push({ mainText: newMainText, subText: newSubText, isActive: true });
     setCards(updatedCards);
     handleCloseModal();
@@ -64,9 +59,6 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, onCardPress }) => 
     <View style={styles.innerContainer}>
       <View style={styles.titleContainer}>
         <Text style={styles.innerContainerTitle} numberOfLines={1} ellipsizeMode="tail">{title}</Text>
-        <TouchableOpacity style={styles.button} onPress={onEditPress}>
-          <MaterialCommunityIcons name={isEditing ? 'check' : 'pencil'} size={16} color="#fff" />
-        </TouchableOpacity>
       </View>
       <View style={styles.cardsContainer}>
         {cards.map((card, index) => (
@@ -138,17 +130,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  button: {
-    backgroundColor: '#4da6ff',
-    padding: 5,
-    borderRadius: 5,
-    marginHorizontal: 5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   cardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -165,7 +146,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
+    width: '40%',
     padding: 20,
     backgroundColor: '#fff',
     borderRadius: 8,
@@ -184,7 +165,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   input: {
-    width: '100%',
+    width: '50%',
     padding: 10,
     borderWidth: 1,
     borderColor: '#ccc',
