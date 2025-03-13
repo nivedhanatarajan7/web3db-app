@@ -60,10 +60,10 @@ export default function HomeAssistant() {
         console.warn("No devices found, using default categories.");
         setCategories({
           Health: [
-            { category: "Health", name: "Heart Rate", measurement: "bpm" },
-            { category: "Health", name: "Blood Pressure", measurement: "mmHg" },
+            { category: "Health", name: "Heart Rate", measurement: "bpm", isActive: true },
+            { category: "Health", name: "Blood Pressure", measurement: "mmHg", isActive: true },
           ],
-          Home: [{ category: "Home", name: "Temperature", measurement: "°C" }],
+          Home: [{ category: "Home", name: "Temperature", measurement: "°C", isActive: true }],
         });
         return;
       }
@@ -100,10 +100,10 @@ export default function HomeAssistant() {
       console.error("Error fetching data types:", error);
       setCategories({
         Health: [
-          { category: "Health", name: "Heart Rate", measurement: "bpm" },
-          { category: "Health", name: "Blood Pressure", measurement: "mmHg" },
+          { category: "Health", name: "Heart Rate", measurement: "bpm", isActive: true },
+          { category: "Health", name: "Blood Pressure", measurement: "mmHg", isActive: true },
         ],
-        Home: [{ category: "Home", name: "Temperature", measurement: "°C" }],
+        Home: [{ category: "Home", name: "Temperature", measurement: "°C", isActive: true }],
       });
     } finally {
       setLoading(false);
@@ -123,7 +123,7 @@ export default function HomeAssistant() {
       useNativeDriver: true,
     }).start();
   };
-  
+
 
   const handleCloseModal = () => {
     Animated.timing(fadeAnim, {
@@ -138,6 +138,24 @@ export default function HomeAssistant() {
 
   const handleEditPress = () => {
     setIsEditing(!isEditing);
+    setCategories(prevCategories => {
+      const newCategories = { ...prevCategories };
+      Object.keys(newCategories).forEach(category => {
+        if (!isEditing) {
+          newCategories[category].push({
+            category,
+            name: "Create New Card",
+            measurement: "Insert Data",
+            isActive: false,
+          });
+        } else {
+          newCategories[category] = newCategories[category].filter(
+            item => item.name !== "Create New Card"
+          );
+        }
+      });
+      return newCategories;
+    });
   };
 
   return (
@@ -153,15 +171,17 @@ export default function HomeAssistant() {
             />
           </TouchableOpacity>
         </View>
-        {Object.entries(categories).map(([categoryName, items]) => (
-          <CardContainer
-            key={categoryName}
-            title={categoryName}
-            items={items} // Pass items array to CardContainer
-            onCardPress={handleCardPress}
-            isEditing={isEditing}
-          />
-        ))}
+        <View style={styles.outerContainer}>
+          {Object.entries(categories).map(([categoryName, items]) => (
+            <CardContainer
+              key={categoryName}
+              title={categoryName}
+              items={items} // Pass items array to CardContainer
+              onCardPress={handleCardPress}
+              isEditing={isEditing}
+            />
+          ))}
+        </View>
 
         {selectedCard && (
           <Modal
@@ -179,10 +199,10 @@ export default function HomeAssistant() {
                 >
                   <Text style={styles.closeButtonText}>X</Text>
                 </TouchableOpacity>
-<DataScreen
-          dataType={selectedCard.mainText} 
-          measurement={selectedCard.subText} 
-        />
+                <DataScreen
+                  dataType={selectedCard.mainText}
+                  measurement={selectedCard.subText}
+                />
               </View>
             </Animated.View>
           </Modal>
@@ -245,7 +265,7 @@ const styles = StyleSheet.create({
   outerContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    alignItems: "center", // Center items vertically
+    alignItems: "flex-start",
     width: "100%",
     marginBottom: 20,
     flexWrap: "wrap", // Allow containers to wrap to the next line

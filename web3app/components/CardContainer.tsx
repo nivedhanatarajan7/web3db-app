@@ -139,10 +139,13 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, items, onCardPress
   };
 
   const handleAddCard = () => {
-    const updatedCards = cards.filter(card => card.isActive);
-    updatedCards.push({ name: newMainText, measurement_unit: newSubText, isActive: true });
-    setCards(updatedCards);
-    handleCloseModal();
+    const responseData = addDataType();
+    if (responseData) {
+      const updatedCards = cards.filter(card => card.isActive);
+      updatedCards.push({ name: newMainText, measurement_unit: newSubText, isActive: true });
+      setCards(updatedCards);
+      handleCloseModal();
+    }
   };
 
   return (
@@ -240,7 +243,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, items, onCardPress
               />
               <Button
                 title={loading ? "Adding..." : "Add"}
-                onPress={addDataType}
+                onPress={handleAddCard}
                 color="#2196F3"
                 disabled={loading}
               />
