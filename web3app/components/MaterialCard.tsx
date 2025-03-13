@@ -14,7 +14,7 @@ type MaterialCardProps = {
   isActive?: boolean;
 };
 
-const MaterialCard: React.FC<MaterialCardProps> = ({ mainText = "Create New Card", subText = "Data", icon = 'heart', color = 'red', onPress, isEditing, isActive = 'true' }) => {
+const MaterialCard: React.FC<MaterialCardProps> = ({ mainText = "Create New Card", subText = "Data", icon = 'chart-bar', color = 'gray', onPress, isEditing, isActive = 'true' }) => {
   const [isHovered, setIsHovered] = useState(false);
   const scaleValue = useRef(new Animated.Value(1)).current;
 

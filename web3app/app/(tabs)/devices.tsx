@@ -1,16 +1,41 @@
-import React, { useState } from "react";
+import axios from "axios";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, Button, FlatList, StyleSheet } from "react-native";
 import { Card } from "react-native-paper";
+import { useAuth } from "../AuthContext";
 
 const DevicesScreen = () => {
   const [deviceId, setDeviceId] = useState("");
   const [devices, setDevices] = useState([]);
+  const router = useRouter();
+  const { walletInfo, logout } = useAuth();
+
+
+  useEffect(() => {
+    getDevice();
+    }, []);
+
+    const getDevice = async () => {
+      try {
+        const response = await axios.post(
+          "http://129.74.152.201:5100/get-registered-devices",
+          {
+            wallet_id: walletInfo.address,
+          }
+        );
+    
+        // Ensure response.data?.data is always an array
+        setDevices(response.data?.data ?? []);
+      } catch (error) {
+        console.error("Error fetching devices:", error);
+        setDevices([]); // Set to an empty array on error
+      }
+    };
+    
 
   const addDevice = () => {
-    if (deviceId.trim()) {
-      setDevices([...devices, { id: deviceId }]);
-      setDeviceId("");
-    }
+    
   };
 
   return (

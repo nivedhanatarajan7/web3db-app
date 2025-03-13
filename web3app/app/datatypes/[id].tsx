@@ -6,12 +6,18 @@ import { useLocalSearchParams } from "expo-router";
 import { LineChart } from "react-native-gifted-charts";
 import { useAuth } from "../AuthContext";
 
-export default function DataScreen() {
+interface DataScreenProps {
+  dataType: string;
+  measurement: string;
+}
+
+
+const DataScreen: React.FC<DataScreenProps> = ({ dataType, measurement }) => {
   const params = useLocalSearchParams();
   const { walletInfo, logout } = useAuth();
 
-  const id = params.id as string;
-  const measurementUnit = params.measurementUnit as string;
+  const id = dataType as string;
+  const measurementUnit = measurement as string;
   const title = id?.replace(/-/g, " ") || "Unknown"; // Format for display
 
   const [values, setValues] = useState<number[]>([]);
@@ -294,6 +300,9 @@ export default function DataScreen() {
     </ScrollView>
   );
 }
+
+export default DataScreen;
+
 
 const styles = StyleSheet.create({
   container: { 

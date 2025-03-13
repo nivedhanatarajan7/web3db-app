@@ -1,13 +1,118 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Animated } from 'react-native';
-import CardContainer from '../../components/CardContainer'; // Adjust the path as necessary
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+} from "react-native";
+import CardContainer from "../../components/CardContainer"; // Adjust the path as necessary
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { useRouter } from "expo-router";
+import axios from "axios";
+import { useAuth } from "../AuthContext";
+import DataScreen from "../datatypes/[id]"; // Adjust the path based on your project structure
 
 export default function HomeAssistant() {
+  const router = useRouter();
+  const { walletInfo, logout } = useAuth();
+
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<{ mainText: string; subText: string } | null>(null);
+  const [selectedCard, setSelectedCard] = useState<{
+    mainText: string;
+    subText: string;
+  } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  const [categories, setCategories] = useState<{
+    [key: string]: {
+      category: string;
+      name: string;
+      measurement: string;
+      isActive: boolean;
+    }[];
+  }>({});
+  const [newDataType, setNewDataType] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
+  const [measurement, setMeasurement] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const fetchDataTypes = async () => {
+    try {
+      setLoading(true);
+      console.log("Fetching data for wallet:", walletInfo.address);
+
+      const response = await axios.post(
+        "http://129.74.152.201:5100/get-registered-devices",
+        { wallet_id: walletInfo.address }
+      );
+
+      console.log("Full API Response:", response.data);
+
+      const responseData = response.data.devices || [];
+
+      if (!Array.isArray(responseData) || responseData.length === 0) {
+        console.warn("No devices found, using default categories.");
+        setCategories({
+          Health: [
+            { category: "Health", name: "Heart Rate", measurement: "bpm" },
+            { category: "Health", name: "Blood Pressure", measurement: "mmHg" },
+          ],
+          Home: [{ category: "Home", name: "Temperature", measurement: "°C" }],
+        });
+        return;
+      }
+
+      // Merge categories correctly
+      const groupedData = responseData.reduce((acc, item) => {
+        if (!item.category || !item.name) {
+          console.warn("Skipping item with missing category or name:", item);
+          return acc;
+        }
+
+        // Ensure Health category only appears once and includes HR + BP
+        if (!acc[item.category]) acc[item.category] = [];
+
+        // Avoid adding duplicate entries
+        const exists = acc[item.category].some(
+          (existing) => existing.name === item.name
+        );
+        if (!exists) {
+          acc[item.category].push({
+            category: item.category,
+            name: item.name,
+            measurement: item.measurement_unit || "N/A",
+            isActive: true, // Default to false
+          });
+        }
+
+        return acc;
+      }, {});
+
+      console.log("Grouped Data:", groupedData);
+      setCategories(groupedData);
+    } catch (error) {
+      console.error("Error fetching data types:", error);
+      setCategories({
+        Health: [
+          { category: "Health", name: "Heart Rate", measurement: "bpm" },
+          { category: "Health", name: "Blood Pressure", measurement: "mmHg" },
+        ],
+        Home: [{ category: "Home", name: "Temperature", measurement: "°C" }],
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDataTypes();
+  }, []);
 
   const handleCardPress = (mainText: string, subText: string) => {
     setSelectedCard({ mainText, subText });
@@ -18,6 +123,7 @@ export default function HomeAssistant() {
       useNativeDriver: true,
     }).start();
   };
+  
 
   const handleCloseModal = () => {
     Animated.timing(fadeAnim, {
@@ -34,42 +140,49 @@ export default function HomeAssistant() {
     setIsEditing(!isEditing);
   };
 
-  const cardContainers = [
-    { title: 'Container 1' },
-    { title: 'Container 2' },
-    { title: 'Container 3' },
-    { title: 'Container 4' },
-    { title: 'Container 5' },
-    { title: 'Container 6' },
-  ];
-
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <View style={styles.headerContainer}>
-          <Text style={styles.header}>Welcome to Home Assistant</Text>
+          <Text style={styles.header}>Welcome to Web3DB App, User!</Text>
           <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
-            <MaterialCommunityIcons name={isEditing ? 'check' : 'pencil'} size={24} color="#fff" />
+            <MaterialCommunityIcons
+              name={isEditing ? "check" : "pencil"}
+              size={24}
+              color="#fff"
+            />
           </TouchableOpacity>
         </View>
-        <View style={styles.outerContainer}>
-          {cardContainers.map((container, index) => (
-            <CardContainer key={index} title={container.title} onCardPress={handleCardPress} isEditing={isEditing} />
-          ))}
-        </View>
+        {Object.entries(categories).map(([categoryName, items]) => (
+          <CardContainer
+            key={categoryName}
+            title={categoryName}
+            items={items} // Pass items array to CardContainer
+            onCardPress={handleCardPress}
+            isEditing={isEditing}
+          />
+        ))}
+
         {selectedCard && (
           <Modal
             transparent={true}
             visible={modalVisible}
             onRequestClose={handleCloseModal}
           >
-            <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
+            <Animated.View
+              style={[styles.modalContainer, { opacity: fadeAnim }]}
+            >
               <View style={styles.modalContent}>
-                <TouchableOpacity onPress={handleCloseModal} style={styles.closeButton}>
+                <TouchableOpacity
+                  onPress={handleCloseModal}
+                  style={styles.closeButton}
+                >
                   <Text style={styles.closeButtonText}>X</Text>
                 </TouchableOpacity>
-                <Text style={styles.modalMainText}>{selectedCard.mainText}</Text>
-                <Text style={styles.modalSubText}>{selectedCard.subText}</Text>
+<DataScreen
+          dataType={selectedCard.mainText} 
+          measurement={selectedCard.subText} 
+        />
               </View>
             </Animated.View>
           </Modal>
@@ -85,64 +198,85 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: "#f5f5f5",
     padding: 20,
   },
   headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
     marginBottom: 20,
+  },
+  categoryContainer: {
+    width: "100%",
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  categoryTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  cardGroup: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
   },
   header: {
     fontSize: 24,
-    textAlign: 'center',
+    textAlign: "center",
     flex: 1,
   },
   editButton: {
-    backgroundColor: '#4da6ff',
+    backgroundColor: "#4da6ff",
     padding: 10,
     borderRadius: 100,
     marginRight: 40,
   },
   outerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center', // Center items vertically
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center", // Center items vertically
+    width: "100%",
     marginBottom: 20,
-    flexWrap: 'wrap', // Allow containers to wrap to the next line
-    
+    flexWrap: "wrap", // Allow containers to wrap to the next line
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    width: '40%',
+    width: "40%",
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   closeButton: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
   closeButtonText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   modalMainText: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   modalSubText: {
     fontSize: 18,
-    color: 'gray',
+    color: "gray",
   },
 });
