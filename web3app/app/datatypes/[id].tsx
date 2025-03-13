@@ -162,147 +162,141 @@ const DataScreen: React.FC<DataScreenProps> = ({ dataType, measurement }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.date}>
-        <IconButton
-          icon="chevron-left"
-          size={24}
-          onPress={() =>
-            setSelectedDate(new Date(selectedDate.getTime() - 86400000))
-          }
-        />
-        <Button mode="contained" buttonColor="#2196F3" onPress={() => setShowDatePicker(true)}>
-          {selectedDate.toDateString()}
-        </Button>
-        
-        <IconButton
-          icon="chevron-right"
-          size={24}
-          onPress={() =>
-            setSelectedDate(new Date(selectedDate.getTime() + 86400000))
-          }
-        />
-      </View> 
-
       <Text variant="headlineMedium" style={styles.title}>
-        {title} Overview
-      </Text>
-
-      <View style={styles.row}>
-        <Card style={styles.valuecard}>
-          <Text variant="titleMedium" style={styles.valuetitle}>
-            Current {title}
+            {title} Overview
           </Text>
-          <Text variant="displaySmall" style={styles.valueText}>
-            {current} {measurementUnit}
+  
+      <View style={styles.layoutContainer}>
+        {/* Left Side: Date Picker & Graph */}
+        <View style={styles.leftSide}>
+          <View style={styles.date}>
+            <IconButton
+              icon="chevron-left"
+              size={24}
+              onPress={() =>
+                setSelectedDate(new Date(selectedDate.getTime() - 86400000))
+              }
+            />
+            <Button mode="contained" buttonColor="#2196F3" onPress={() => setShowDatePicker(true)}>
+              {selectedDate.toDateString()}
+            </Button>
+            <IconButton
+              icon="chevron-right"
+              size={24}
+              onPress={() =>
+                setSelectedDate(new Date(selectedDate.getTime() + 86400000))
+              }
+            />
+          </View>
+  
+          <View style={styles.buttonRow}>
+            {["1 hour", "5 hours", "24 hours"].map((item) => (
+              <Button
+                key={item}
+                mode="contained"
+                style={[
+                  styles.timeButton,
+                  timeframe === item ? styles.activeButton : styles.inactiveButton,
+                ]}
+                labelStyle={
+                  timeframe === item ? styles.activeButtonText : styles.inactiveButtonText
+                }
+                onPress={() => setTimeframe(item)}
+              >
+                {item}
+              </Button>
+            ))}
+          </View>
+  
+          <Text variant="titleLarge" style={styles.title}>
+            {title} Trends
           </Text>
-        </Card>
 
-        <Card style={styles.valuecard}>
-          <Text variant="titleMedium" style={styles.valuetitle}>
-            Average {title}
-          </Text>
-          <Text variant="displaySmall" style={styles.valueText}>
-            {values.length > 0
-              ? (values.reduce((a, b) => a + b) / values.length).toFixed(1)
-              : "No data"}{" "}
-            {measurementUnit}
-          </Text>
-        </Card>
-
-        <Card style={styles.valuecard}>
-          <Text variant="titleMedium" style={styles.valuetitle}>
-            Highest {title}
-          </Text>
-          <Text variant="displaySmall" style={styles.valueText}>
-            {values.length > 0 ? Math.max(...values) : "No data"}{" "}
-            {measurementUnit}
-          </Text>
-        </Card>
-      </View>
-
-              <br />
-                            <br />
-
-      <Text variant="titleLarge" style={styles.title}>
-        {title} Trends
-      </Text>
-      <View style={styles.chartContainer}>
-
-      <LineChart
-        data={mergedValues.map((value, index) => ({
-          value,
-          label: formattedLabels[index] || "",
-        }))}
-        width={Dimensions.get("window").width * 0.92}
-        height={300}
-        color="rgba(0, 123, 255, 1)"
-        yAxisTextStyle={{ color: "#000000" }}
-        xAxisLabelTextStyle={{ color: "#000000", fontSize: 10 }} // Reduce font size if needed
-        yAxisOffset={0} // Helps control the scale
-        startFillColor="rgba(0, 123, 255, 1)"
-          endFillColor="rgba(20,85,81,0.01)"
-        noOfSections={3}
-        areaChart
-        curved
-        showXAxisIndices={true} // Show vertical grid lines
-        xAxisIndicesHeight={5} // Make index markers more visible
-        pointerConfig={{
-          pointerStripHeight: 160,
-          pointerStripColor: 'lightgray',
-          pointerStripWidth: 2,
-          pointerColor: 'lightgray',
-          radius: 6,
-          pointerLabelWidth: 100,
-          pointerLabelHeight: 90,
-          activatePointersOnLongPress: true,
-          autoAdjustPointerLabelPosition: false,
-          pointerLabelComponent: items => {
-            return (
-              <View
-                style={{
-                  height: 90,
-                  width: 100,
-                  justifyContent: 'center',
-                }}>
-                <Text style={{color: 'white', fontSize: 14, marginBottom:6,textAlign:'center'}}>
-                  {items[0].date}
-                </Text>
-
-                <View style={{paddingHorizontal:14,paddingVertical:6, borderRadius:16, backgroundColor:'white'}}>
-                  <Text style={{fontWeight: 'bold',textAlign:'center'}}>
-                    {items[0].value + ' bpm'}
-                  </Text>
-                </View>
-              </View>
-            );
-          },
-        }}
-      />
-</View>
-      <View style={styles.row}>
-        {["1 hour", "5 hours", "24 hours"].map((item) => (
-          <Button
-          mode="contained"
-          style={[
-            styles.timeButton,
-            timeframe === item ? styles.activeButton : styles.inactiveButton,
-          ]}
-          labelStyle={
-            timeframe === item ? styles.activeButtonText : styles.inactiveButtonText
-          }
-          onPress={() => setTimeframe(item)}
-        >
-          {item}
-        </Button>
-        
-        ))}
+          <View style={styles.chartContainer}>
+            <LineChart
+              data={mergedValues.map((value, index) => ({
+                value,
+                label: formattedLabels[index] || "",
+              }))}
+              width={200}
+              height={200}
+              color="rgba(0, 123, 255, 1)"
+              yAxisTextStyle={{ color: "#000000" }}
+              xAxisLabelTextStyle={{ color: "#000000", fontSize: 10 }}
+              startFillColor="rgba(0, 123, 255, 1)"
+              endFillColor="rgba(20,85,81,0.01)"
+              noOfSections={3}
+              areaChart
+              curved
+              showXAxisIndices={true}
+              xAxisIndicesHeight={5}
+              pointerConfig={{
+                pointerStripHeight: 160,
+                pointerStripColor: "lightgray",
+                pointerStripWidth: 2,
+                pointerColor: "lightgray",
+                radius: 6,
+                pointerLabelWidth: 100,
+                pointerLabelHeight: 90,
+                activatePointersOnLongPress: true,
+                autoAdjustPointerLabelPosition: false,
+                pointerLabelComponent: (items) => (
+                  <View style={{ height: 90, width: 100, justifyContent: "center" }}>
+                    <Text style={{ color: "white", fontSize: 14, marginBottom: 6, textAlign: "center" }}>
+                      {items[0].date}
+                    </Text>
+                    <View style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: "white" }}>
+                      <Text style={{ fontWeight: "bold", textAlign: "center" }}>
+                        {items[0].value} bpm
+                      </Text>
+                    </View>
+                  </View>
+                ),
+              }}
+            />
+          </View>
+  
+        </View>
+  
+        {/* Right Side: Data Cards */}
+        <View style={styles.rightSide}>
+          <Card style={styles.valueCard}>
+            <Text variant="titleMedium" style={styles.valueTitle}>
+              Current {title}
+            </Text>
+            <Text variant="displaySmall" style={styles.valueText}>
+              {current} {measurementUnit}
+            </Text>
+          </Card>
+  
+          <Card style={styles.valueCard}>
+            <Text variant="titleMedium" style={styles.valueTitle}>
+              Average {title}
+            </Text>
+            <Text variant="displaySmall" style={styles.valueText}>
+              {values.length > 0
+                ? (values.reduce((a, b) => a + b) / values.length).toFixed(1)
+                : "No data"}{" "}
+              {measurementUnit}
+            </Text>
+          </Card>
+  
+          <Card style={styles.valueCard}>
+            <Text variant="titleMedium" style={styles.valueTitle}>
+              Highest {title}
+            </Text>
+            <Text variant="displaySmall" style={styles.valueText}>
+              {values.length > 0 ? Math.max(...values) : "No data"} {measurementUnit}
+            </Text>
+          </Card>
+        </View>
       </View>
     </ScrollView>
   );
+  
 }
 
 export default DataScreen;
-
 
 const styles = StyleSheet.create({
   container: { 
@@ -311,19 +305,44 @@ const styles = StyleSheet.create({
     flexGrow: 1 
   },
 
+  layoutContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap", // Allows wrapping on smaller screens
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+
+  leftSide: {
+    width: "60%", // Ensure it doesn't exceed the screen width
+    paddingRight: 10,
+  },
+
+  rightSide: {
+    flexDirection: "column", // Stack cards vertically
+    width: "35%", 
+    alignItems: "center", // Center items horizontally
+    justifyContent: "space-between", // Distribute them evenly
+  },
+  
+  valueCard: {
+    width: "90%", // Make the cards take most of the right side width
+    backgroundColor: "#2196F3",
+    padding: 15,
+    marginVertical: 10, // Adds spacing between cards
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3, 
+  },
+  
+
   title: { 
     textAlign: "center", 
-    marginBottom: 10, 
+    marginBottom: 2, 
     fontSize: 20, 
     fontWeight: "bold", 
     color: "#000000" 
-  },
-
-  row: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 15,
   },
 
   date: {
@@ -333,30 +352,22 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 
-  valuecard: {
-    flex: 1,
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
-    textAlign: "center",
-    backgroundColor: "#2196F3",
-    padding: 15,
-    marginHorizontal: 10,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3, 
+    marginBottom: 15,
   },
 
   valueText: { 
-    fontSize: 22, 
+    fontSize: 10, 
     fontWeight: "bold", 
     color: "#ffffff", 
-    marginVertical: 8, 
+    marginVertical: 2, 
     textAlign: "center",
-
   },
 
-  valuetitle: {
+  valueTitle: {
     textAlign: "center",
     fontSize: 14,
     fontWeight: "600",
@@ -386,13 +397,14 @@ const styles = StyleSheet.create({
   },
 
   chartContainer: { 
+    flex: 1, // Allow it to grow
+    width: "100%", // Ensure it spans the full width
     marginVertical: 10, 
     padding: 10, 
     borderRadius: 10, 
-    backgroundColor: "white", 
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 4,
+    backgroundColor: "white",
+    alignItems: "center",
+    justifyContent: "center",
   },
+  
 });
