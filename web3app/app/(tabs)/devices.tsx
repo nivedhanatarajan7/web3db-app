@@ -41,7 +41,7 @@ const DevicesScreen = () => {
       const newEntry = {
         wallet_id: walletInfo.address,
         device_id: deviceId,
-        name: deviceId,
+        name: name,
         category: category,
         measurement_unit: measurement,
       };
@@ -102,7 +102,7 @@ const DevicesScreen = () => {
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <Card style={styles.deviceCard}>
-                <Text style={styles.deviceText}>{item.category}/{item.device_id}</Text>
+                <Text style={styles.deviceText}>{item.device_id}</Text>
               </Card>
             )}
           />

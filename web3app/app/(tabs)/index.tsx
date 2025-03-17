@@ -21,6 +21,7 @@ export default function HomeAssistant() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCard, setSelectedCard] = useState<{
+    category: string;
     mainText: string;
     subText: string;
   } | null>(null);
@@ -200,6 +201,7 @@ export default function HomeAssistant() {
                   <Text style={styles.closeButtonText}>X</Text>
                 </TouchableOpacity>
                 <DataScreen
+                  category={selectedCard.category}
                   dataType={selectedCard.mainText}
                   measurement={selectedCard.subText}
                 />

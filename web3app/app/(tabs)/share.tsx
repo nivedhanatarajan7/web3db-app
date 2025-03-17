@@ -16,6 +16,7 @@ const ShareDeviceScreen = () => {
     const shareDevice = async () => {
       const newEntry = {
         subscriber_ID: walletId,
+        owner_id: walletInfo.address,
         device_id: deviceId,
       };
       console.log(`${walletInfo.address}/data_type`);
@@ -29,7 +30,6 @@ const ShareDeviceScreen = () => {
   
         const responseData = await response.json(); // Read response
   
-        window.location.reload();
   
       } catch {
         console.log("Error adding data");
