@@ -8,12 +8,12 @@ import {
   ScrollView,
   Animated,
 } from "react-native";
-import CardContainer from "../../components/CardContainer"; // Adjust the path as necessary
+import CardContainer from "../components/CardContainer"; // Adjust the path as necessary
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useRouter } from "expo-router";
 import axios from "axios";
-import { useAuth } from "../AuthContext";
-import DataScreen from "../datatypes/[id]"; // Adjust the path based on your project structure
+import { useAuth } from "./AuthContext";
+import DataScreen from "./datatypes/[id]"; // Adjust the path based on your project structure
 
 export default function HomeAssistant() {
   const router = useRouter();
