@@ -27,6 +27,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, items, onCardPress
   const [modalVisible, setModalVisible] = useState(false);
   const [newMainText, setNewMainText] = useState('');
   const [newSubText, setNewSubText] = useState('');
+  const [itemsList, setItemsList]= useState(items);
     const router = useRouter();
     const { walletInfo, logout } = useAuth();
   
@@ -124,8 +125,8 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, items, onCardPress
   }
 
   const onEditCardPress = (index: number) => {
-    const updatedCards = cards.filter((_, i) => i !== index);
-    setCards(updatedCards);
+    const updatedItems = itemsList.filter((_, i) => i !== index);
+    setItemsList(updatedItems);
   };
 
   const onEditAddCardPress = () => {
@@ -138,14 +139,25 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, items, onCardPress
     setNewSubText('');
   };
 
-  const handleAddCard = () => {
-    const responseData = addDataType();
-    if (responseData) {
-      const updatedCards = cards.filter(card => card.isActive);
-      updatedCards.push({ name: newMainText, measurement_unit: newSubText, isActive: true });
-      setCards(updatedCards);
-      handleCloseModal();
-    }
+  const handleAddCard = async () => {
+    await addDataType();
+    const categoryToUse = customCategory ? newCategory : selectedCategory;
+    const newItems = itemsList.filter((item) => item.isActive);
+
+    newItems.push({
+      isActive: true,
+      category: categoryToUse,
+      name: newDataType,
+      measurement: measurement,
+    });
+    newItems.push({
+      isActive: false,
+      category: categoryToUse,
+      name: "Create New Card",
+      measurement: "Insert Data",
+    });
+    setItemsList(newItems);
+    handleCloseModal();
   };
 
   return (
@@ -154,8 +166,8 @@ const CardContainer: React.FC<CardContainerProps> = ({ title, items, onCardPress
         <Text style={styles.innerContainerTitle} numberOfLines={1} ellipsizeMode="tail">{title}</Text>
       </View>
       <View style={styles.cardsContainer}>
-        {items.map((item, index) => (
-          <View style={styles.cardWrapper}>
+        {itemsList.map((item, index) => (
+          <View style={styles.cardWrapper} key={index}>
             <MaterialCard
               mainText={item.name}
               subText={item.measurement}
