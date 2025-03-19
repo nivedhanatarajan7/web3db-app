@@ -1,80 +1,110 @@
-import { useRouter } from "expo-router";
+import React, { useState, useRef, useEffect } from "react";
 import {
-  ScrollView,
   View,
-  StyleSheet,
-  TextInput,
-  Button,
-  Alert,
-  Modal,
-} from "react-native";
-import {
-  Card,
-  Surface,
   Text,
-  Title,
-  Subheading,
-  FAB,
-} from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useState, useEffect } from "react";
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+} from "react-native";
+import CardContainer from "../../components/CardContainer"; // Adjust the path as necessary
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { useRouter } from "expo-router";
 import axios from "axios";
-import { Picker } from "@react-native-picker/picker";
 import { useAuth } from "../AuthContext";
+import DataScreen from "../datatypes/[id]"; // Adjust the path based on your project structure
 
-export default function HomePage() {
+export default function HomeAssistant() {
   const router = useRouter();
   const { walletInfo, logout } = useAuth();
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<{
+    category: string;
+    mainText: string;
+    subText: string;
+  } | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
   const [categories, setCategories] = useState<{
-    [key: string]: { value: string; measurement: string }[];
+    [key: string]: {
+      category: string;
+      name: string;
+      measurement: string;
+      isActive: boolean;
+    }[];
   }>({});
   const [newDataType, setNewDataType] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [customCategory, setCustomCategory] = useState(false);
   const [newCategory, setNewCategory] = useState("");
   const [measurement, setMeasurement] = useState("");
-  const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const fetchDataTypes = async () => {
     try {
       setLoading(true);
+      console.log("Fetching data for wallet:", walletInfo.address);
+
       const response = await axios.post(
         "http://129.74.152.201:5100/get-registered-devices",
-        {
-          wallet_id: walletInfo.address,
-        }
+        { wallet_id: walletInfo.address }
       );
 
-      const responseData = response.data?.data;
+      console.log("Full API Response:", response.data);
+
+      const responseData = response.data.devices || [];
 
       if (!Array.isArray(responseData) || responseData.length === 0) {
+        console.warn("No devices found, using default categories.");
         setCategories({
-          Health: [{ value: "Heart Rate", measurement: "bpm" }],
-          Home: [{ value: "Temperature", measurement: "°C" }],
+          Health: [
+            { category: "Health", name: "Heart Rate", measurement: "bpm", isActive: true },
+            { category: "Health", name: "Blood Pressure", measurement: "mmHg", isActive: true },
+          ],
+          Home: [{ category: "Home", name: "Temperature", measurement: "°C", isActive: true }],
         });
         return;
       }
 
-      const groupedData: {
-        [key: string]: { value: string; measurement: string }[];
-      } = {};
+      // Merge categories correctly
+      const groupedData = responseData.reduce((acc, item) => {
+        if (!item.category || !item.name) {
+          console.warn("Skipping item with missing category or name:", item);
+          return acc;
+        }
 
-      responseData.forEach((item) => {
-        if (!groupedData[item.category]) groupedData[item.category] = [];
-        groupedData[item.category].push({
-          value: item.value,
-          measurement: item.measurement,
-        });
-      });
+        // Ensure Health category only appears once and includes HR + BP
+        if (!acc[item.category]) acc[item.category] = [];
 
+        // Avoid adding duplicate entries
+        const exists = acc[item.category].some(
+          (existing) => existing.name === item.name
+        );
+        if (!exists) {
+          acc[item.category].push({
+            category: item.category,
+            name: item.name,
+            measurement: item.measurement_unit || "N/A",
+            isActive: true, // Default to false
+          });
+        }
+
+        return acc;
+      }, {});
+
+      console.log("Grouped Data:", groupedData);
       setCategories(groupedData);
     } catch (error) {
       console.error("Error fetching data types:", error);
       setCategories({
-        Health: [{ value: "Heart Rate", measurement: "bpm" }],
-        Home: [{ value: "Temperature", measurement: "°C" }],
+        Health: [
+          { category: "Health", name: "Heart Rate", measurement: "bpm", isActive: true },
+          { category: "Health", name: "Blood Pressure", measurement: "mmHg", isActive: true },
+        ],
+        Home: [{ category: "Home", name: "Temperature", measurement: "°C", isActive: true }],
       });
     } finally {
       setLoading(false);
@@ -85,328 +115,190 @@ export default function HomePage() {
     fetchDataTypes();
   }, []);
 
-  const addDataType = async () => {
-    const categoryToUse = customCategory ? newCategory : selectedCategory;
-    const newEntry = {
-      wallet_id: walletInfo.address,
-      device_id: newDataType
-    };
-    console.log(`${walletInfo.address}/data_type`);
-
-    try {
-      setLoading(true);
-      const response = await fetch("http://129.74.152.201:5100/add-device", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newEntry),
-      });
-
-      const responseData = await response.json(); // Read response
+  const handleCardPress = (mainText: string, subText: string) => {
+    setSelectedCard({ mainText, subText });
+    setModalVisible(true);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 10, // Instant duration
+      useNativeDriver: true,
+    }).start();
+  };
 
 
-      if (response.ok) {
-        Alert.alert("Success", "New data type added!");
+  const handleCloseModal = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 10, // Instant duration
+      useNativeDriver: true,
+    }).start(() => {
+      setModalVisible(false);
+      setSelectedCard(null);
+    });
+  };
 
-
-        setCategories((prevCategories) => {
-          const updatedCategories = { ...prevCategories };
-          if (!updatedCategories[categoryToUse]) {
-            updatedCategories[categoryToUse] = [];
-          }
-          updatedCategories[categoryToUse].push({
-            value: newDataType,
-            measurement,
+  const handleEditPress = () => {
+    setIsEditing(!isEditing);
+    setCategories(prevCategories => {
+      const newCategories = { ...prevCategories };
+      Object.keys(newCategories).forEach(category => {
+        if (!isEditing) {
+          newCategories[category].push({
+            category,
+            name: "Create New Card",
+            measurement: "Insert Data",
+            isActive: false,
           });
-          return updatedCategories;
-        });
-
-        setNewDataType("");
-        setSelectedCategory("");
-        setNewCategory("");
-        setMeasurement("");
-        setCustomCategory(false);
-        setModalVisible(false);
-      } else {
-        Alert.alert("Error", "Failed to add data type.");
-      }
-    } catch (error) {
-      console.error("Error adding data type:", error);
-    } finally {
-      setLoading(false);
-    }
+        } else {
+          newCategories[category] = newCategories[category].filter(
+            item => item.name !== "Create New Card"
+          );
+        }
+      });
+      return newCategories;
+    });
   };
 
   return (
-    <View style={styles.container}>
-      <Card style={styles.welcomeCard}>
-        <Card.Content style={styles.welcomeCardContent}>
-          <Text style={styles.welcomeText}>Hello, User!</Text>
-          <MaterialCommunityIcons
-            name="account-circle"
-            size={40}
-            color="black"
-          />
-        </Card.Content>
-      </Card>
-
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.categoryRow}>
-          {Object.keys(categories).map((category, index) => (
-            <Surface key={index} style={styles.cluster}>
-              <Title style={styles.clusterTitle}>{category}</Title>
-              {categories[category].map((data, idx) => (
-                <Card
-                  key={idx}
-                  style={styles.card}
-                  onPress={() =>
-                    router.push(
-                      `/datatypes/${encodeURIComponent(
-                        data.value
-                      )}?measurementUnit=${encodeURIComponent(
-                        data.measurement
-                      )}`
-                    )
-                  }
-                >
-                  <Card.Content style={styles.row}>
-                    <MaterialCommunityIcons
-                      name="chart-bar"
-                      size={30}
-                      color="white"
-                    />
-                    <View style={styles.cardTextContainer}>
-                      <Subheading style={styles.cardText}>
-                        {data.value}
-                      </Subheading>
-                      <Text style={styles.label}>
-                        Measurement: {data.measurement}
-                      </Text>
-                    </View>
-                  </Card.Content>
-                </Card>
-              ))}
-            </Surface>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.header}>Welcome to Web3DB App, User!</Text>
+          <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
+            <MaterialCommunityIcons
+              name={isEditing ? "check" : "pencil"}
+              size={24}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.outerContainer}>
+          {Object.entries(categories).map(([categoryName, items]) => (
+            <CardContainer
+              key={categoryName}
+              title={categoryName}
+              items={items} // Pass items array to CardContainer
+              onCardPress={handleCardPress}
+              isEditing={isEditing}
+            />
           ))}
         </View>
-      </ScrollView>
 
-      <FAB
-        style={styles.fab}
-        icon="plus"
-        color="white"
-        onPress={() => setModalVisible(true)}
-      />
-
-      <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.formlabel}>Data Type</Text>
-            <TextInput
-              placeholder="Data Type Name"
-              style={styles.input}
-              value={newDataType}
-              onChangeText={setNewDataType}
-            />
-
-            <Text style={styles.formlabel}>Category</Text>
-            <Picker
-              style={styles.pickerContainer}
-              selectedValue={selectedCategory}
-              onValueChange={(itemValue) => {
-                if (itemValue === "Other") {
-                  setCustomCategory(true);
-                  setSelectedCategory("");
-                } else {
-                  setCustomCategory(false);
-                  setSelectedCategory(itemValue);
-                }
-              }}
+        {selectedCard && (
+          <Modal
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={handleCloseModal}
+          >
+            <Animated.View
+              style={[styles.modalContainer, { opacity: fadeAnim }]}
             >
-              <Picker.Item
-                style={styles.picker}
-                label="Select a Category"
-                value=""
-              />
-              {Object.keys(categories).map((category, index) => (
-                <Picker.Item key={index} label={category} value={category} />
-              ))}
-              <Picker.Item label="Create New Category" value="Other" />
-            </Picker>
-
-            {customCategory && (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter new category"
-                value={newCategory}
-                onChangeText={setNewCategory}
-              />
-            )}
-
-            <Text style={styles.formlabel}>Measurement Units</Text>
-            <TextInput
-              placeholder="Measurement Unit (e.g., bpm)"
-              style={styles.input}
-              value={measurement}
-              onChangeText={setMeasurement}
-            />
-
-            <View style={styles.buttonRow}>
-              <Button
-                title="Cancel"
-                onPress={() => setModalVisible(false)}
-                color="gray"
-              />
-              <Button
-                title={loading ? "Adding..." : "Add"}
-                onPress={addDataType}
-                color="#2196F3"
-                disabled={loading}
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
+              <View style={styles.modalContent}>
+                <TouchableOpacity
+                  onPress={handleCloseModal}
+                  style={styles.closeButton}
+                >
+                  <Text style={styles.closeButtonText}>X</Text>
+                </TouchableOpacity>
+                <DataScreen
+                  category={selectedCard.category}
+                  dataType={selectedCard.mainText}
+                  measurement={selectedCard.subText}
+                />
+              </View>
+            </Animated.View>
+          </Modal>
+        )}
+      </View>
+    </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0", // Light gray background for clean look
-  },
-
-  scrollContainer: {
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
     padding: 20,
   },
-
-  welcomeCard: {
-    alignSelf: "center",
-    marginVertical: 20,
-    padding: 15,
-    borderRadius: 10,
-    backgroundColor: "white",
-    elevation: 3,
-  },
-
-  welcomeCardContent: {
+  headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  welcomeText: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-
-  categoryRow: {
-    flexDirection: "row",
-    flexWrap: "wrap", // Ensures wrapping on small screens
-    justifyContent: "space-between",
-    paddingHorizontal: 10,
-  },
-
-  cluster: {
-    width: "48%", // Make each category take half the width
-    marginBottom: 15,
-    padding: 30,
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
-    elevation: 3,
-  },
-
-  clusterTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  card: {
-    marginBottom: 10,
-    backgroundColor: "#2196F3", // Blue card background
-    borderRadius: 8,
-    padding: 10,
-    elevation: 2,
-  },
-
-  cardTextContainer: {
-    marginLeft: 10,
-  },
-
-  cardText: {
-    fontSize: 16,
-    color: "white", // Ensures text inside cards is white
-  },
-
-  label: {
-    fontSize: 14,
-    color: "white", // Ensures label text is white
-  },
-
-  formlabel: {
-    fontSize: 14,
-    marginVertical: 15,
-  },
-
-  fab: {
-    position: "absolute",
-    right: 20,
-    bottom: 20,
-    backgroundColor: "#2196F3",
-    borderRadius: 50,
-    width: 56,
-    height: 56,
     justifyContent: "center",
-    alignItems: "center",
+    width: "100%",
+    marginBottom: 20,
   },
-
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    backgroundColor: "#f9f9f9",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginVertical: 8,
+  categoryContainer: {
+    width: "100%",
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: "#fff",
+    borderRadius: 10,
     shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  picker: {
-    fontSize: 16,
-    color: "#333",
+  categoryTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  cardGroup: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  header: {
+    fontSize: 24,
+    textAlign: "center",
+    flex: 1,
+  },
+  editButton: {
+    backgroundColor: "#4da6ff",
+    padding: 10,
+    borderRadius: 100,
+    marginRight: 40,
+  },
+  outerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    width: "100%",
+    marginBottom: 20,
+    flexWrap: "wrap", // Allow containers to wrap to the next line
   },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-
   modalContent: {
-    width: "90%",
-    backgroundColor: "white",
+    width: "40%",
     padding: 20,
-    borderRadius: 10,
-    elevation: 5,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    alignItems: "center",
   },
-
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    padding: 10,
-    backgroundColor: "#f9f9f9",
+  closeButton: {
+    alignSelf: "flex-end",
   },
-
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 15,
+  closeButtonText: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  modalMainText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalSubText: {
+    fontSize: 18,
+    color: "gray",
   },
 });

@@ -7,16 +7,18 @@ import { LineChart } from "react-native-gifted-charts";
 import { useAuth } from "../AuthContext";
 
 interface DataScreenProps {
+  category: string;
   dataType: string;
   measurement: string;
 }
 
 
-const DataScreen: React.FC<DataScreenProps> = ({ dataType, measurement }) => {
+const DataScreen: React.FC<DataScreenProps> = ({ category, dataType, measurement }) => {
   const params = useLocalSearchParams();
   const { walletInfo, logout } = useAuth();
 
   const id = dataType as string;
+  const category_use = category as string;
   const measurementUnit = measurement as string;
   const title = id?.replace(/-/g, " ") || "Unknown"; // Format for display
 
@@ -42,7 +44,7 @@ const DataScreen: React.FC<DataScreenProps> = ({ dataType, measurement }) => {
     try {
       const requestBody = {
         time: timeframe,
-        topic: id,
+        topic: `${walletInfo.address}/${category_use}/${id}`,
         date: selectedDate.toISOString().split("T")[0],
         wallet_id: walletInfo.address
       };

@@ -55,15 +55,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="home-assistant"
-        options={{
-          title: 'Home Assistant',
-          tabBarIcon: ({ focused }) => (
-            <Icon source="account" size={30} color={focused ? activeColor : inactiveColor} />
-          ),
-        }}
-      />
     </Tabs>
     
   );

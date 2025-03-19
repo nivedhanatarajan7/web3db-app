@@ -1,61 +1,64 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, Button, FlatList, StyleSheet } from "react-native";
+import axios from "axios";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { View, Text, TextInput, Button, FlatList, StyleSheet, ScrollView } from "react-native";
 import { Card } from "react-native-paper";
+import { useAuth } from "../AuthContext";
 
-const ShareDataScreen = () => {
-  const [walletId, setWalletId] = useState("");
+const ShareDeviceScreen = () => {
   const [deviceId, setDeviceId] = useState("");
-  const [sharedUsers, setSharedUsers] = useState([]);
+  const [walletId, setWalletId] = useState("");
 
-  const shareData = () => {
-    if (walletId.trim() && deviceId.trim()) {
-      setSharedUsers([...sharedUsers, { walletId, deviceId }]);
-      setWalletId("");
-      setDeviceId("");
-    }
-  };
+  const [users, setUsers] = useState([]);
+  const router = useRouter();
+  const { walletInfo, logout } = useAuth();
+
+    const shareDevice = async () => {
+      const newEntry = {
+        subscriber_ID: walletId,
+        owner_id: walletInfo.address,
+        device_id: deviceId,
+      };
+      console.log(`${walletInfo.address}/data_type`);
+  
+      try {
+        const response = await fetch("http://129.74.152.201:5100/subscribe-device", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newEntry),
+        });
+  
+        const responseData = await response.json(); // Read response
+  
+  
+      } catch {
+        console.log("Error adding data");
+      }
+    };
+    
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>Share Data</Text>
       <Card style={styles.card}>
-        <Text style={styles.header}>Share Data</Text>
+        <Text style={styles.header}>Share Data with Users</Text>
         <Text style={styles.formlabel}>User's Wallet ID</Text>
-
         <TextInput
           style={styles.input}
-          placeholder="Enter User Wallet ID"
+          placeholder="Enter Wallet ID"
           value={walletId}
           onChangeText={setWalletId}
         />
-                    <Text style={styles.formlabel}>User's Device ID</Text>
-
+        <Text style={styles.formlabel}>Device ID</Text>
         <TextInput
           style={styles.input}
           placeholder="Enter Device ID"
           value={deviceId}
           onChangeText={setDeviceId}
         />
-        <Button title="Share Data" onPress={shareData} color="#007AFF" />
+        <Button title="Share Data" onPress={shareDevice} color="#007AFF" />
       </Card>
-      <Card style={styles.card}>
-        <Text style={styles.header}>Shared Users</Text>
-        {sharedUsers.length === 0 ? (
-          <Text style={styles.noSharedUsers}>No shared users</Text>
-        ) : (
-          <FlatList
-            data={sharedUsers}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <Card style={styles.deviceCard}>
-                <Text style={styles.deviceText}>Wallet: {item.walletId}</Text>
-                <Text style={styles.deviceText}>Device: {item.deviceId}</Text>
-              </Card>
-            )}
-          />
-        )}
-      </Card>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -71,6 +74,13 @@ const styles = StyleSheet.create({
     color: "black",
     textAlign: "center",
     marginBottom: 20,
+  },
+  
+  formlabel: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "gray",
+    marginBottom: 10,
   },
   card: {
     backgroundColor: "white",
@@ -88,13 +98,6 @@ const styles = StyleSheet.create({
     color: "black",
     marginBottom: 10,
   },
-
-  formlabel: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: "gray",
-    marginBottom: 10,
-  },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
@@ -102,7 +105,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
   },
-  noSharedUsers: {
+  noDevices: {
     textAlign: "center",
     color: "gray",
   },
@@ -118,4 +121,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ShareDataScreen;
+export default ShareDeviceScreen;
