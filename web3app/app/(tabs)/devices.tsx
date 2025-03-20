@@ -8,6 +8,8 @@ import { useAuth } from "../AuthContext";
 const DevicesScreen = () => {
   const [deviceId, setDeviceId] = useState("");
   const [category, setCategory] = useState("");
+  const [name, setName] = useState("");
+
   const [measurement, setMeasurement] = useState("");
 
   const [devices, setDevices] = useState([]);
@@ -55,9 +57,7 @@ const DevicesScreen = () => {
         });
   
         const responseData = await response.json(); // Read response
-  
-        window.location.reload();
-  
+        console.log(response);
       } catch {
         console.log("Error adding data");
       }
@@ -75,6 +75,13 @@ const DevicesScreen = () => {
           placeholder="Enter Device ID (ex. Heart Rate, Blood Pressure)"
           value={deviceId}
           onChangeText={setDeviceId}
+        />
+        <Text style={styles.formlabel}>Name</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter Name for Data Type"
+          value={name}
+          onChangeText={setName}
         />
         <Text style={styles.formlabel}>Category</Text>
         <TextInput
