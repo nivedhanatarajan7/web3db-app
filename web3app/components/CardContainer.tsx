@@ -15,6 +15,8 @@ import { Picker } from "@react-native-picker/picker";
 import axios from "axios";
 
 type Card = {
+  category: string;
+
   name: string;
   measurement_unit: string;
   isActive: boolean;
@@ -28,7 +30,7 @@ type CardContainerProps = {
     name: string;
     measurement: string;
   }[];
-  onCardPress: (mainText: string, subText: string) => void;
+  onCardPress: (category: string, mainText: string, subText: string) => void;
   isEditing: boolean;
 };
 
@@ -130,6 +132,7 @@ const CardContainer: React.FC<CardContainerProps> = ({
   // Add empty cards to ensure there are always 6 cards
   while (cards.length < 6) {
     cards.push({
+      category: "",
       name: "Create New Card",
       measurement_unit: "Insert Data",
       isActive: false,
@@ -194,7 +197,7 @@ const CardContainer: React.FC<CardContainerProps> = ({
                   ? item.isActive
                     ? () => onEditCardPress(index)
                     : onEditAddCardPress
-                  : () => onCardPress(item.name, item.measurement)
+                  : () => onCardPress(item.category, item.name, item.measurement)
               }
               isEditing={isEditing}
               isActive={item.isActive}

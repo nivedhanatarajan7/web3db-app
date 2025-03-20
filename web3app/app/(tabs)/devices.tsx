@@ -58,6 +58,8 @@ const DevicesScreen = () => {
   
         const responseData = await response.json(); // Read response
         console.log(response);
+
+        window.location.reload();
       } catch {
         console.log("Error adding data");
       }
