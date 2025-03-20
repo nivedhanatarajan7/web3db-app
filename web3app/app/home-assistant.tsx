@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Animated,
+  TextInput,
+  Button,
 } from "react-native";
 import CardContainer from "../components/CardContainer"; // Adjust the path as necessary
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -41,6 +43,17 @@ export default function HomeAssistant() {
   const [newCategory, setNewCategory] = useState("");
   const [measurement, setMeasurement] = useState("");
   const [loading, setLoading] = useState(false);
+  const [newContainerName, setNewContainerName] = useState("");
+  const [addContainerModalVisible, setAddContainerModalVisible] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
 
   const fetchDataTypes = async () => {
     try {
@@ -124,7 +137,6 @@ export default function HomeAssistant() {
     }).start();
   };
 
-
   const handleCloseModal = () => {
     Animated.timing(fadeAnim, {
       toValue: 0,
@@ -158,18 +170,51 @@ export default function HomeAssistant() {
     });
   };
 
+  const handleAddContainer = () => {
+    if (newContainerName) {
+      setCategories((prevCategories) => ({
+        ...prevCategories,
+        [newContainerName]: [
+          {
+            category: newContainerName,
+            name: "Create New Card",
+            measurement: "Insert Data",
+            isActive: false,
+          },
+        ],
+      }));
+      setNewContainerName("");
+      setAddContainerModalVisible(false);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <View style={styles.headerContainer}>
           <Text style={styles.header}>Welcome to Web3DB App, User!</Text>
-          <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
-            <MaterialCommunityIcons
-              name={isEditing ? "check" : "pencil"}
-              size={24}
-              color="#fff"
-            />
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[
+                styles.addButton,
+                !isEditing && styles.hidden,
+                isHovered && styles.addButtonHovered,
+              ]}
+              onPress={() => setAddContainerModalVisible(true)}
+              disabled={!isEditing}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              <Text style={styles.addButtonText}>Add New Container</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
+              <MaterialCommunityIcons
+                name={isEditing ? "check" : "pencil"}
+                size={24}
+                color="#fff"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.outerContainer}>
           {Object.entries(categories).map(([categoryName, items]) => (
@@ -207,6 +252,36 @@ export default function HomeAssistant() {
             </Animated.View>
           </Modal>
         )}
+
+        <Modal
+          transparent={true}
+          visible={addContainerModalVisible}
+          onRequestClose={() => setAddContainerModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Add New Container</Text>
+              <TextInput
+                placeholder="Container Name"
+                style={styles.input}
+                value={newContainerName}
+                onChangeText={setNewContainerName}
+              />
+              <View style={styles.buttonRow}>
+                <Button
+                  title="Cancel"
+                  onPress={() => setAddContainerModalVisible(false)}
+                  color="gray"
+                />
+                <Button
+                  title="Add"
+                  onPress={handleAddContainer}
+                  color="#2196F3"
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </ScrollView>
   );
@@ -221,13 +296,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f5f5f5",
     padding: 20,
+    paddingTop: 30, // Add padding to the top
   },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between", // Adjust this to space-between
     width: "100%",
     marginBottom: 20,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    position: "absolute",
+    right: 0,
+  },
+  addButton: {
+    backgroundColor: "#4da6ff",
+    padding: 10,
+    borderRadius: 100,
+    marginRight: 10,
+    transition: "transform 0.2s", // Add transition for smooth scaling
+  },
+  addButtonHovered: {
+    transform: "scale(1.05)", // Scale up the button when hovered
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  hidden: {
+    opacity: 0,
   },
   categoryContainer: {
     width: "100%",
@@ -266,8 +365,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "flex-start",
+    alignContent: "flex-start",
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 0,
+    /* paddingHorizontal: 50, */
     flexWrap: "wrap", // Allow containers to wrap to the next line
   },
   modalContainer: {
@@ -282,6 +383,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 8,
     alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: "#f9f9f9",
+    width: "100%",
+    marginBottom: 20,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
   },
   closeButton: {
     alignSelf: "flex-end",
