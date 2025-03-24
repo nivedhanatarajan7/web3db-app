@@ -15,14 +15,14 @@ const ShareDeviceScreen = () => {
 
     const shareDevice = async () => {
       const newEntry = {
-        subscriber_ID: walletId,
+        subscriber_email: walletId,
         owner_id: walletInfo.address,
-        device_id: deviceId,
+        device_id: `${deviceId}`,
       };
       console.log(`${walletInfo.address}/data_type`);
   
       try {
-        const response = await fetch("http://129.74.152.201:5100/subscribe-device", {
+        const response = await fetch("http://129.74.152.201:5100/share-access", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newEntry),
