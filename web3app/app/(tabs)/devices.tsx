@@ -42,7 +42,7 @@ const DevicesScreen = () => {
     const addDevice = async () => {
       const newEntry = {
         wallet_id: walletInfo.address,
-        device_id: deviceId,
+        device_id: `${deviceId}`,
         name: name,
         category: category,
         measurement_unit: measurement,
