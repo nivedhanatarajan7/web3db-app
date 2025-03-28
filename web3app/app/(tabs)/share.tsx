@@ -42,10 +42,10 @@ const ShareDeviceScreen = () => {
       <Text style={styles.title}>Share Data</Text>
       <Card style={styles.card}>
         <Text style={styles.header}>Share Data with Users</Text>
-        <Text style={styles.formlabel}>User's Wallet ID</Text>
+        <Text style={styles.formlabel}>User's Email Address</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter Wallet ID"
+          placeholder="Enter Email Address"
           value={walletId}
           onChangeText={setWalletId}
         />

@@ -42,7 +42,7 @@ const DevicesScreen = () => {
     const addDevice = async () => {
       const newEntry = {
         wallet_id: walletInfo.address,
-        device_id: `${deviceId}`,
+        device_id: `${walletInfo.address}/${deviceId}/${category}/${name}`,
         name: name,
         category: category,
         measurement_unit: measurement,
@@ -74,14 +74,14 @@ const DevicesScreen = () => {
         <Text style={styles.formlabel}>Device ID</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter Device ID (ex. Heart Rate, Blood Pressure)"
+          placeholder="Enter Device ID (ex. apple_watch_1)"
           value={deviceId}
           onChangeText={setDeviceId}
         />
-        <Text style={styles.formlabel}>Name</Text>
+        <Text style={styles.formlabel}>Name of Data Type</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter Name for Data Type"
+          placeholder="Enter Name of Data Type"
           value={name}
           onChangeText={setName}
         />
