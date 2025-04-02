@@ -23,8 +23,6 @@ export default function HomeAssistant() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCard, setSelectedCard] = useState<{
-    category: string;
-
     mainText: string;
     subText: string;
   } | null>(null);
@@ -129,18 +127,9 @@ export default function HomeAssistant() {
     fetchDataTypes();
   }, []);
 
-  const handleCardPress = (category: string, mainText: string, subText: string) => {
-    /* setSelectedCard({ category, mainText, subText });
-    setModalVisible(true);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 10, // Instant duration
-      useNativeDriver: true,
-    }).start(); */
-    console.log("Main text: ", mainText, "Sub text: ", subText)
-    const encdoedCategory = encodeURIComponent(category.trim());
-    const encodedMainText = encodeURIComponent(mainText.trim());
-    const encodedSubText = encodeURIComponent(subText.trim());
+  const handleCardPress = (mainText: string, subText: string) => {
+    const encodedMainText = encodeURIComponent(mainText);
+    const encodedSubText = encodeURIComponent(subText);
     router.push(`/datatypes/${encodedMainText}?measurementUnit=${encodedSubText}`);
   };
 
@@ -229,9 +218,7 @@ export default function HomeAssistant() {
               key={categoryName}
               title={categoryName}
               items={items} // Pass items array to CardContainer
-              onCardPress={
-                handleCardPress
-              }
+              onCardPress={handleCardPress}
               isEditing={isEditing}
             />
           ))}
@@ -254,8 +241,6 @@ export default function HomeAssistant() {
                   <Text style={styles.closeButtonText}>X</Text>
                 </TouchableOpacity>
                 <DataScreen
-                  category={selectedCard.category}
-
                   dataType={selectedCard.mainText}
                   measurement={selectedCard.subText}
                 />

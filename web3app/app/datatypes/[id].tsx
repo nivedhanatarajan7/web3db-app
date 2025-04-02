@@ -17,9 +17,9 @@ const DataScreen: React.FC<DataScreenProps> = ({ category, dataType, measurement
   const params = useLocalSearchParams();
   const { walletInfo, logout } = useAuth();
 
-  const id = dataType as string;
+  const id = params.id as string;
   const category_use = category as string;
-  const measurementUnit = measurement as string;
+  const measurementUnit = params.measurementUnit as string;
   const title = id?.replace(/-/g, " ") || "Unknown"; // Format for display
 
   const [values, setValues] = useState<number[]>([]);
